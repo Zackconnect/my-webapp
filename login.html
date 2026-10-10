@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Zackconnect</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header class="auth-brand" aria-label="Zackconnect">
+        <img src="images/logo.png" alt="">
+        <span>ZACKCONNECT</span>
+    </header>
+
+    <!-- Login Section -->
+    <section class="auth-section">
+        <div class="container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h1 class="auth-title">Welcome back</h1>
+                    <p class="auth-subtitle">Log in to your account</p>
+                </div>
+                <form class="auth-form" id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    </div>
+                    <div class="form-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="remember">
+                            <span>Remember me</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="auth-submit-button">Log in</button>
+                    <p class="auth-status" id="loginStatus" aria-live="polite"></p>
+                </form>
+                <div class="auth-footer">
+                    <p>Don't have an account? <a href="signup.html" class="auth-link">Sign up</a></p>
+                    <p class="auth-storage-note">This demo saves accounts in this browser only. It is not secure for real customer accounts.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

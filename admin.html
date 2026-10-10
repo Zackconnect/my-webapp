@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Zackconnect</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <img src="images/logo.png" alt="Zackconnect Logo" class="logo-image">
+                <span class="logo-text">ZACKCONNECT</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="software.html">Software</a></li>
+                <li><a href="car-import.html">Car Import</a></li>
+                <li><a href="data-bundels.html">Data Bundles</a></li>
+                <li><a href="bajaj.html">Bajaj Tricycles</a></li>
+                <li><a href="login.html?return=admin.html" class="nav-auth-link">Log in</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Admin Hero Section -->
+    <section class="admin-hero">
+        <div class="container">
+            <p class="admin-category">ADMIN DASHBOARD</p>
+            <h1 class="admin-title">Welcome back</h1>
+            <p class="admin-description">Manage your enquiries, orders, and services.</p>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="admin-stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📧</div>
+                    <div class="stat-info">
+                        <h3 class="stat-number" id="newEnquiriesCount">0</h3>
+                        <p class="stat-label">New Enquiries</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-info">
+                        <h3 class="stat-number">156</h3>
+                        <p class="stat-label">Total Orders</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-info">
+                        <h3 class="stat-number">GH¢ 45,200</h3>
+                        <p class="stat-label">Revenue</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-info">
+                        <h3 class="stat-number">4.8</h3>
+                        <p class="stat-label">Rating</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Enquiries Section -->
+    <section class="admin-enquiries-section">
+        <div class="container">
+            <h2 class="admin-section-title">Recent Enquiries</h2>
+            <div class="enquiries-table">
+                <div class="table-header">
+                    <div class="table-cell">Name</div>
+                    <div class="table-cell">Contact</div>
+                    <div class="table-cell">Service</div>
+                    <div class="table-cell">Message</div>
+                    <div class="table-cell">Status</div>
+                    <div class="table-cell">Date</div>
+                    <div class="table-cell">Action</div>
+                </div>
+                <div id="adminEnquiriesList"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-catalog-section">
+        <div class="container">
+            <h2 class="admin-section-title">Manage data bundles</h2>
+            <p class="admin-catalog-description">Set a price for an existing bundle or add a bundle for another network or size. Changes update the Data Bundles page in this browser; keep both pages on the same site address.</p>
+            <form class="admin-catalog-form" id="bundleAdminForm">
+                <input type="hidden" id="bundleAdminId">
+                <label>
+                    Network
+                    <select id="bundleAdminNetwork" required>
+                        <option value="MTN">MTN</option>
+                        <option value="TELECEL">TELECEL</option>
+                        <option value="AIRTELTIGO">AIRTELTIGO</option>
+                        <option value="AFA REG.">AFA REG.</option>
+                    </select>
+                </label>
+                <label>
+                    Bundle size
+                    <input id="bundleAdminSize" type="text" placeholder="e.g. 5GB" required>
+                </label>
+                <label>
+                    Price (GH¢)
+                    <input id="bundleAdminPrice" type="number" min="0.01" step="0.01" placeholder="e.g. 25.00" required>
+                </label>
+                <label>
+                    Validity
+                    <input id="bundleAdminValidity" type="text" value="No-Expiry" required>
+                </label>
+                <div class="admin-form-actions">
+                    <button class="action-button" type="submit">Save bundle</button>
+                    <button class="admin-cancel-button hidden" id="bundleAdminCancel" type="button">Cancel edit</button>
+                </div>
+            </form>
+            <p class="admin-catalog-status" id="bundleAdminStatus" aria-live="polite"></p>
+            <div class="admin-catalog-list" id="bundleAdminList"></div>
+        </div>
+    </section>
+
+    <section class="admin-catalog-section">
+        <div class="container">
+            <h2 class="admin-section-title">Manage cars</h2>
+            <p class="admin-catalog-description">Add vehicles with their specifications. Changes update the Car Import page in this browser; keep both pages on the same site address.</p>
+            <form class="admin-catalog-form car-admin-form" id="carAdminForm">
+                <input type="hidden" id="carAdminId">
+                <label>
+                    Vehicle name
+                    <input id="carAdminName" type="text" placeholder="e.g. Toyota Camry 2024" required>
+                </label>
+                <label>
+                    Price
+                    <input id="carAdminPrice" type="text" placeholder="e.g. $25,000" required>
+                </label>
+                <label>
+                    Condition
+                    <select id="carAdminCondition" required>
+                        <option value="New">New</option>
+                        <option value="Used">Used</option>
+                    </select>
+                </label>
+                <label>
+                    Transmission
+                    <input id="carAdminTransmission" type="text" placeholder="e.g. Automatic" required>
+                </label>
+                <label>
+                    Engine
+                    <input id="carAdminEngine" type="text" placeholder="e.g. 2.5L" required>
+                </label>
+                <label>
+                    Mileage
+                    <input id="carAdminMileage" type="text" placeholder="e.g. 12,000 km">
+                </label>
+                <label>
+                    Color
+                    <input id="carAdminColor" type="text" placeholder="e.g. Silver">
+                </label>
+                <label>
+                    Image URL (optional)
+                    <input id="carAdminImage" type="url" placeholder="https://example.com/car.jpg">
+                </label>
+                <label>
+                    Upload car photo (optional)
+                    <input id="carAdminPhotoFile" type="file" accept="image/*">
+                </label>
+                <label>
+                    Upload car videos (optional)
+                    <input id="carAdminVideoFiles" type="file" accept="video/*" multiple>
+                </label>
+                <label class="admin-form-wide">
+                    Additional specifications
+                    <textarea id="carAdminDescription" rows="3" placeholder="Trim, drivetrain, features, or other details"></textarea>
+                </label>
+                <div class="admin-form-actions admin-form-wide">
+                    <button class="action-button" type="submit">Save car</button>
+                    <button class="admin-cancel-button hidden" id="carAdminCancel" type="button">Cancel edit</button>
+                </div>
+            </form>
+            <p class="admin-catalog-status" id="carAdminStatus" aria-live="polite"></p>
+            <div class="admin-catalog-list" id="carAdminList"></div>
+        </div>
+    </section>
+
+    <section class="admin-catalog-section">
+        <div class="container">
+            <h2 class="admin-section-title">Manage tricycles</h2>
+            <p class="admin-catalog-description">Add tricycles with photos and videos. Changes update the Bajaj Tricycles page in this browser; keep both pages on the same site address.</p>
+            <form class="admin-catalog-form car-admin-form" id="tricycleAdminForm">
+                <input type="hidden" id="tricycleAdminId">
+                <label>
+                    Tricycle name
+                    <input id="tricycleAdminName" type="text" placeholder="e.g. Bajaj RE Passenger Tricycle" required>
+                </label>
+                <label>
+                    Price
+                    <input id="tricycleAdminPrice" type="text" placeholder="e.g. GHC 42,000" required>
+                </label>
+                <label>
+                    Condition
+                    <select id="tricycleAdminCondition" required>
+                        <option value="New">New</option>
+                        <option value="Used">Used</option>
+                    </select>
+                </label>
+                <label>
+                    Year
+                    <input id="tricycleAdminYear" type="text" placeholder="e.g. 2025" required>
+                </label>
+                <label class="admin-form-wide">
+                    Description / specifications
+                    <textarea id="tricycleAdminDescription" rows="3" placeholder="Seats, engine, condition, or other details" required></textarea>
+                </label>
+                <label>
+                    Photo URL (optional)
+                    <input id="tricycleAdminImage" type="url" placeholder="https://example.com/tricycle.jpg">
+                </label>
+                <label>
+                    Upload tricycle photo (optional)
+                    <input id="tricycleAdminPhotoFile" type="file" accept="image/*">
+                </label>
+                <label>
+                    Upload tricycle videos (optional)
+                    <input id="tricycleAdminVideoFiles" type="file" accept="video/*" multiple>
+                </label>
+                <div class="admin-form-actions admin-form-wide">
+                    <button class="action-button" type="submit">Save tricycle</button>
+                    <button class="admin-cancel-button hidden" id="tricycleAdminCancel" type="button">Cancel edit</button>
+                </div>
+            </form>
+            <p class="admin-catalog-status" id="tricycleAdminStatus" aria-live="polite"></p>
+            <div class="admin-catalog-list" id="tricycleAdminList"></div>
+        </div>
+    </section>
+
+    <!-- Quick Actions Section -->
+    <section class="admin-actions-section">
+        <div class="container">
+            <h2 class="admin-section-title">Quick Actions</h2>
+            <div class="actions-grid">
+                <button class="action-card">
+                    <span class="action-icon">➕</span>
+                    <span class="action-label">Add New Service</span>
+                </button>
+                <button class="action-card">
+                    <span class="action-icon">📊</span>
+                    <span class="action-label">View Reports</span>
+                </button>
+                <button class="action-card">
+                    <span class="action-icon">⚙️</span>
+                    <span class="action-label">Settings</span>
+                </button>
+                <button class="action-card">
+                    <span class="action-icon">👥</span>
+                    <span class="action-label">Manage Users</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-simple">
+                <div class="footer-brand">
+                    <span class="logo-text">ZACKCONNECT</span>
+                    <p class="footer-tagline">Your link to quality service</p>
+                </div>
+                <div class="footer-actions">
+                    <a href="enquire.html" class="footer-link">Enquire</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
