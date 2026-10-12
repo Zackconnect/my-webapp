@@ -777,15 +777,100 @@ body {
 
 /* Car Import Page Styles */
 .car-hero {
-    background-color: #f8f5f0;
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background-color: #333;
     padding: 120px 20px 60px;
     text-align: center;
+}
+
+.car-hero-slide {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    overflow: hidden;
+    background-position: center;
+    background-size: cover;
+    animation: car-hero-crossfade 18s ease-in-out infinite;
+}
+
+.car-hero-slide-port {
+    background-image: url("images/car-import-port.png");
+}
+
+.car-hero-slide-ship {
+    background-image: url("images/car-import-ship.png");
+    animation-delay: -6s;
+}
+
+.car-hero-slide-jetour {
+    background-color: #333;
+    background-image: url("images/car-import-jetour.png");
+    animation-delay: -12s;
+}
+
+.car-hero-slide.car-hero-slide-jetour img {
+    object-fit: contain;
+    object-position: center;
+}
+
+.car-hero-slide::after {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 10, 10, 0.4);
+    content: "";
+}
+
+.car-hero-slide img {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+}
+
+@keyframes car-hero-crossfade {
+    0%, 42% {
+        opacity: 1;
+    }
+
+    50%, 92% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.car-hero .container {
+    position: relative;
+    z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .car-hero-slide {
+        animation: none;
+    }
+
+    .car-hero-slide-ship {
+        opacity: 0;
+    }
+
+    .car-hero-slide-jetour {
+        opacity: 0;
+    }
 }
 
 .car-category {
     font-size: 14px;
     letter-spacing: 2px;
-    color: #c41e3a;
+    color: #fff;
     margin-bottom: 20px;
     text-transform: uppercase;
     font-weight: 600;
@@ -796,7 +881,8 @@ body {
     font-weight: bold;
     line-height: 1.2;
     margin-bottom: 25px;
-    color: #333;
+    color: #fff;
+    text-shadow: 0 3px 12px rgba(0, 0, 0, 0.9);
 }
 
 .car-filters {
@@ -1011,7 +1097,10 @@ body {
 
 /* Bajaj Tricycles Page Styles */
 .tricycle-hero {
-    background-color: #f8f5f0;
+    background-color: #17384a;
+    background-image: linear-gradient(rgba(8, 25, 38, 0.35), rgba(8, 25, 38, 0.35)), url("images/bajaj-tricycles-background.png");
+    background-position: center 58%;
+    background-size: cover;
     padding: 120px 20px 60px;
     text-align: center;
 }
@@ -1019,10 +1108,11 @@ body {
 .tricycle-category {
     font-size: 14px;
     letter-spacing: 2px;
-    color: #c41e3a;
+    color: #fff;
     margin-bottom: 20px;
     text-transform: uppercase;
     font-weight: 600;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
 }
 
 .tricycle-title {
@@ -1030,7 +1120,8 @@ body {
     font-weight: bold;
     line-height: 1.2;
     margin-bottom: 25px;
-    color: #333;
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
 }
 
 .tricycle-filters {
