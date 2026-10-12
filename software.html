@@ -64,7 +64,41 @@
     <!-- CTA Section -->
     <section class="software-cta">
         <div class="container">
-            <button class="software-cta-button">Start a software project →</button>
+            <button class="software-cta-button" id="startSoftwareProject" type="button" aria-expanded="false" aria-controls="softwareProjectForm">
+                Start a software project →
+            </button>
+            <form class="software-project-form hidden" id="softwareProjectForm">
+                <h2>Tell us about your project</h2>
+                <p>Share a few details and attach a PDF with your requirements, if available.</p>
+                <div class="software-project-fields">
+                    <label>
+                        Your name
+                        <input name="name" type="text" autocomplete="name" required>
+                    </label>
+                    <label>
+                        Email address
+                        <input name="email" type="email" autocomplete="email" required>
+                    </label>
+                    <label>
+                        Phone number
+                        <input name="phone" type="tel" autocomplete="tel">
+                    </label>
+                    <label>
+                        Project name
+                        <input name="projectName" type="text" placeholder="e.g. Online booking system" required>
+                    </label>
+                    <label class="software-project-description">
+                        Describe your project
+                        <textarea name="description" rows="5" placeholder="What would you like us to build? Include the main features and who will use it." required></textarea>
+                    </label>
+                    <label class="software-project-description">
+                        Attach a project brief (PDF, up to 15 MB)
+                        <input name="brief" type="file" accept="application/pdf,.pdf">
+                    </label>
+                </div>
+                <button class="software-cta-button" type="submit">Send project request</button>
+                <p class="software-project-status" id="softwareProjectStatus" aria-live="polite"></p>
+            </form>
         </div>
     </section>
 

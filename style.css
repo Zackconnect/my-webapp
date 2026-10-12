@@ -579,6 +579,99 @@ body {
     background-color: #a01830;
 }
 
+.software-cta-button:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+.software-project-form {
+    max-width: 760px;
+    margin: 36px auto 0;
+    padding: 32px;
+    border-radius: 14px;
+    background: #fff;
+    text-align: left;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.software-project-form h2 {
+    margin: 0 0 8px;
+    color: #333;
+    font-size: 28px;
+}
+
+.software-project-form > p {
+    margin: 0 0 24px;
+    color: #666;
+    line-height: 1.6;
+}
+
+.software-project-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.software-project-fields label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: #333;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.software-project-fields input,
+.software-project-fields textarea {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #d8d8d8;
+    border-radius: 8px;
+    background: #fff;
+    color: #222;
+    font: inherit;
+    font-weight: 400;
+}
+
+.software-project-fields select {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #d8d8d8;
+    border-radius: 8px;
+    background: #fff;
+    color: #222;
+    font: inherit;
+    font-weight: 400;
+}
+
+.car-import-budget {
+    display: grid;
+    grid-template-columns: minmax(86px, auto) minmax(0, 1fr);
+    gap: 8px;
+}
+
+.software-project-fields textarea {
+    resize: vertical;
+}
+
+.software-project-description {
+    grid-column: 1 / -1;
+}
+
+.software-project-status {
+    min-height: 24px;
+    margin: 14px 0 0 !important;
+    color: #187647 !important;
+    font-weight: 600;
+}
+
+.software-project-status.error {
+    color: #a01830 !important;
+}
+
 .footer-simple {
     display: flex;
     justify-content: space-between;
@@ -752,6 +845,20 @@ body {
     text-align: center;
 }
 
+.car-import-cta-description {
+    margin: 0 auto 24px;
+    max-width: 680px;
+    color: #555;
+    line-height: 1.6;
+}
+
+.car-cta-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+}
+
 .car-cta-button {
     background-color: #c41e3a;
     color: #fff;
@@ -764,8 +871,73 @@ body {
     transition: background-color 0.3s ease;
 }
 
+.car-cta-button-secondary {
+    background-color: #333;
+}
+
 .car-cta-button:hover {
     background-color: #a01830;
+}
+
+.car-cta-button-secondary:hover {
+    background-color: #1f1f1f;
+}
+
+.car-request-button {
+    display: block;
+    margin: 0 20px 20px;
+    padding: 10px 16px;
+    border: 1px solid #c41e3a;
+    border-radius: 5px;
+    background: #fff;
+    color: #c41e3a;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.car-request-button:hover {
+    background: #c41e3a;
+    color: #fff;
+}
+
+.car-cost-info-section {
+    padding: 72px 20px;
+    background: #fff;
+    text-align: center;
+}
+
+.car-cost-info-section .car-category {
+    margin-bottom: 12px;
+}
+
+.car-cost-info-title {
+    margin: 0 0 16px;
+    color: #333;
+    font-size: 36px;
+}
+
+.car-cost-info-description,
+.car-cost-info-payment-note {
+    max-width: 760px;
+    margin: 0 auto 16px;
+    color: #555;
+    line-height: 1.6;
+}
+
+.car-cost-info-fee {
+    margin: 20px 0 8px;
+    color: #333;
+    font-size: 22px;
+}
+
+.car-cost-info-fee strong {
+    color: #c41e3a;
+}
+
+.car-cost-info-payment-note {
+    margin-bottom: 24px;
+    font-size: 14px;
 }
 
 /* Bajaj Tricycles Page Styles */
@@ -893,8 +1065,31 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
     padding-top: 15px;
     border-top: 1px solid #e0e0e0;
+}
+
+.tricycle-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tricycle-buy-button {
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 5px;
+    background: #c41e3a;
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.tricycle-buy-button:hover {
+    background: #a01830;
 }
 
 .tricycle-price {
@@ -936,6 +1131,13 @@ body {
 
 .tricycle-cta-button:hover {
     background-color: #a01830;
+}
+
+.tricycle-cta > .container > p {
+    margin: 0 auto 22px;
+    max-width: 680px;
+    color: #555;
+    line-height: 1.6;
 }
 
 /* Enquire Page Styles */
@@ -1228,6 +1430,41 @@ body {
 .admin-empty-enquiries {
     padding: 24px 30px;
     color: #666;
+}
+
+.software-project-admin-list {
+    display: grid;
+    gap: 14px;
+}
+
+.software-project-admin-card {
+    padding: 20px;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.software-project-admin-card h3 {
+    margin: 0 0 8px;
+    color: #333;
+    font-size: 20px;
+}
+
+.software-project-admin-contact,
+.software-project-admin-date {
+    margin: 0 0 12px;
+    color: #666;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.software-project-admin-description {
+    margin: 0 0 14px;
+    color: #333;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }
 
 .status-badge {
@@ -3215,6 +3452,18 @@ body {
 }
 
 @media (max-width: 560px) {
+    .software-project-form {
+        padding: 20px;
+    }
+
+    .software-project-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .software-project-description {
+        grid-column: auto;
+    }
+
     .admin-catalog-form {
         grid-template-columns: 1fr;
         padding: 18px;

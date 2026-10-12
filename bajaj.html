@@ -117,7 +117,44 @@
     <!-- CTA Section -->
     <section class="tricycle-cta">
         <div class="container">
-            <button class="tricycle-cta-button">Start a tricycle purchase →</button>
+            <p>Ready to buy? Select a tricycle above or start a purchase request here. Our team will contact you to confirm availability and next steps.</p>
+            <button class="tricycle-cta-button" id="startTricyclePurchase" type="button" aria-expanded="false" aria-controls="tricyclePurchaseForm">
+                Start a tricycle purchase →
+            </button>
+            <form class="software-project-form hidden" id="tricyclePurchaseForm">
+                <h2>Start your tricycle purchase</h2>
+                <p>Send your details and the tricycle you want. Our team will contact you about availability and payment.</p>
+                <div class="software-project-fields">
+                    <label>
+                        Your name
+                        <input name="name" type="text" autocomplete="name" required>
+                    </label>
+                    <label>
+                        Phone number
+                        <input name="phone" type="tel" autocomplete="tel" required>
+                    </label>
+                    <label>
+                        Email address (optional)
+                        <input name="email" type="email" autocomplete="email">
+                    </label>
+                    <label>
+                        Tricycle
+                        <select name="tricycleId" id="tricyclePurchaseSelection" required>
+                            <option value="">Select a tricycle</option>
+                        </select>
+                    </label>
+                    <label class="software-project-description">
+                        Delivery town or region
+                        <input name="deliveryLocation" type="text" placeholder="e.g. Kumasi, Ashanti Region" required>
+                    </label>
+                    <label class="software-project-description">
+                        Additional details (optional)
+                        <textarea name="details" rows="3" placeholder="Tell us about your purchase requirements."></textarea>
+                    </label>
+                </div>
+                <button class="tricycle-cta-button" type="submit">Send purchase request</button>
+                <p class="software-project-status" id="tricyclePurchaseStatus" aria-live="polite"></p>
+            </form>
         </div>
     </section>
 

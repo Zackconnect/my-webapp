@@ -105,7 +105,221 @@
     <!-- CTA Section -->
     <section class="car-cta">
         <div class="container">
-            <button class="car-cta-button">Start a car import →</button>
+            <p class="car-import-cta-description">Choose a car to import or request an estimate for port charges, import charges, and shipping insurance.</p>
+            <div class="car-cta-actions">
+                <button class="car-cta-button" id="startCarImport" type="button" aria-expanded="false" aria-controls="carImportRequestForm">
+                    Start a car import →
+                </button>
+                <button class="car-cta-button car-cta-button-secondary" id="requestImportCosts" type="button" aria-expanded="false" aria-controls="carImportRequestForm">
+                    Request charges &amp; insurance estimate
+                </button>
+            </div>
+            <form class="software-project-form hidden" id="carImportRequestForm">
+                <h2 id="carImportRequestTitle">Tell us what car you’re looking for</h2>
+                <p id="carImportRequestDescription">Share your contact details, budget, and preferred car. We’ll get in touch to discuss your import.</p>
+                <input name="requestType" type="hidden" value="import">
+                <div class="software-project-fields">
+                    <label>
+                        Your name
+                        <input name="name" type="text" autocomplete="name" required>
+                    </label>
+                    <label>
+                        Email address
+                        <input name="email" type="email" autocomplete="email" required>
+                    </label>
+                    <label>
+                        Phone number
+                        <input name="phone" type="tel" autocomplete="tel" required>
+                    </label>
+                    <label>
+                        Budget
+                        <div class="car-import-budget">
+                            <select name="currency" aria-label="Budget currency">
+                                <option value="GH¢">GH¢</option>
+                                <option value="USD">USD</option>
+                            </select>
+                            <input name="budget" type="number" min="1" step="0.01" placeholder="e.g. 150000" required>
+                        </div>
+                    </label>
+                    <label>
+                        Car make
+                        <select name="carMake" required>
+                            <option value="">Select a make</option>
+                            <optgroup label="Popular makes">
+                                <option value="Toyota">Toyota</option>
+                                <option value="Honda">Honda</option>
+                                <option value="Nissan">Nissan</option>
+                                <option value="Hyundai">Hyundai</option>
+                                <option value="Kia">Kia</option>
+                                <option value="Mazda">Mazda</option>
+                                <option value="Mitsubishi">Mitsubishi</option>
+                                <option value="Subaru">Subaru</option>
+                                <option value="Lexus">Lexus</option>
+                                <option value="Mercedes-Benz">Mercedes-Benz</option>
+                                <option value="BMW">BMW</option>
+                                <option value="Audi">Audi</option>
+                                <option value="Volkswagen">Volkswagen</option>
+                                <option value="Ford">Ford</option>
+                                <option value="Chevrolet">Chevrolet</option>
+                                <option value="Jeep">Jeep</option>
+                                <option value="Tesla">Tesla</option>
+                            </optgroup>
+                            <optgroup label="Chinese makes">
+                                <option value="Aion">Aion</option>
+                                <option value="Avatr">Avatr</option>
+                                <option value="BAIC">BAIC</option>
+                                <option value="Baojun">Baojun</option>
+                                <option value="Bestune">Bestune</option>
+                                <option value="BYD">BYD</option>
+                                <option value="Changan">Changan</option>
+                                <option value="Chery">Chery</option>
+                                <option value="Deepal">Deepal</option>
+                                <option value="Denza">Denza</option>
+                                <option value="DFSK">DFSK</option>
+                                <option value="Dongfeng">Dongfeng</option>
+                                <option value="Exeed">Exeed</option>
+                                <option value="FAW">FAW</option>
+                                <option value="Foton">Foton</option>
+                                <option value="GAC">GAC</option>
+                                <option value="Geely">Geely</option>
+                                <option value="Great Wall">Great Wall</option>
+                                <option value="Haval">Haval</option>
+                                <option value="Hongqi">Hongqi</option>
+                                <option value="JAC">JAC</option>
+                                <option value="Jaecoo">Jaecoo</option>
+                                <option value="Jetour">Jetour</option>
+                                <option value="Leapmotor">Leapmotor</option>
+                                <option value="Li Auto">Li Auto</option>
+                                <option value="Lynk &amp; Co">Lynk &amp; Co</option>
+                                <option value="Maxus">Maxus</option>
+                                <option value="Neta">Neta</option>
+                                <option value="NIO">NIO</option>
+                                <option value="Omoda">Omoda</option>
+                                <option value="Seres">Seres</option>
+                                <option value="Soueast">Soueast</option>
+                                <option value="Tank">Tank</option>
+                                <option value="Wuling">Wuling</option>
+                                <option value="XPeng">XPeng</option>
+                                <option value="Zeekr">Zeekr</option>
+                            </optgroup>
+                            <option value="Other">Other</option>
+                        </select>
+                    </label>
+                    <label>
+                        Car model
+                        <input name="carModel" type="text" list="carModelSuggestions" placeholder="e.g. X50, Alsvin, or CS35 Plus" required>
+                        <datalist id="carModelSuggestions"></datalist>
+                        <small>Choose a suggested model or enter another one. Suggestions include budget-friendly Chinese models.</small>
+                    </label>
+                    <label>
+                        Import from
+                        <select name="importCountry" required>
+                            <option value="">Select a country</option>
+                            <option value="China">China</option>
+                            <option value="USA">USA</option>
+                            <option value="Canada">Canada</option>
+                        </select>
+                    </label>
+                    <label>
+                        Destination port
+                        <input name="destinationPort" type="text" placeholder="e.g. Tema Port, Takoradi Port" required>
+                    </label>
+                    <p class="software-project-description">
+                        Port charges, import charges, and shipping insurance will be included in your estimate request.
+                    </p>
+                    <label>
+                        Type of car
+                        <select name="carType" required>
+                            <option value="">Select a type</option>
+                            <option value="Sedan">Sedan</option>
+                            <option value="SUV">SUV</option>
+                            <option value="Pickup truck">Pickup truck</option>
+                            <option value="Van">Van</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </label>
+                    <label>
+                        Condition
+                        <select name="condition" required>
+                            <option value="">Select condition</option>
+                            <option value="New">New</option>
+                            <option value="Used">Used</option>
+                            <option value="Either">Either</option>
+                        </select>
+                    </label>
+                    <label class="software-project-description">
+                        Additional preferences (optional)
+                        <textarea name="preferences" rows="3" placeholder="Preferred year, color, transmission, or other requirements"></textarea>
+                    </label>
+                </div>
+                <button class="car-cta-button" id="carImportSubmit" type="submit">Send car import request</button>
+                <p class="software-project-status" id="carImportRequestStatus" aria-live="polite"></p>
+            </form>
+        </div>
+    </section>
+
+    <section class="car-cost-info-section">
+        <div class="container">
+            <p class="car-category">WORLDWIDE COST INFORMATION</p>
+            <h2 class="car-cost-info-title">Check import, clearance &amp; shipping costs</h2>
+            <p class="car-cost-info-description">Want to check costs before deciding to import? Request information for a vehicle shipping from any country to your destination. We’ll review import charges, customs clearance, and shipping fees.</p>
+            <p class="car-cost-info-fee">Information fee: <strong>GH¢100</strong></p>
+            <p class="car-cost-info-payment-note">The request will be sent to our admin team. The GH¢100 fee is paid separately; submitting this form does not process a payment.</p>
+            <button class="car-cta-button" id="openCarCostInfoForm" type="button" aria-expanded="false" aria-controls="carCostInfoForm">
+                Request import cost information
+            </button>
+            <form class="software-project-form hidden" id="carCostInfoForm">
+                <h2>Request a worldwide import cost check</h2>
+                <p>Provide the vehicle and shipping route so our team can review the likely import charges, customs clearance, and shipping fees.</p>
+                <div class="software-project-fields">
+                    <label>
+                        Your name
+                        <input name="name" type="text" autocomplete="name" required>
+                    </label>
+                    <label>
+                        Email address
+                        <input name="email" type="email" autocomplete="email" required>
+                    </label>
+                    <label>
+                        Phone number
+                        <input name="phone" type="tel" autocomplete="tel" required>
+                    </label>
+                    <label>
+                        Vehicle make and model
+                        <input name="vehicle" type="text" placeholder="e.g. Changan Alsvin" required>
+                    </label>
+                    <label>
+                        Vehicle year
+                        <input name="vehicleYear" type="number" min="1900" max="2100" placeholder="e.g. 2023" required>
+                    </label>
+                    <label>
+                        Vehicle purchase price (optional)
+                        <input name="vehiclePrice" type="text" placeholder="e.g. USD 8,500">
+                    </label>
+                    <label>
+                        Country shipping from
+                        <input name="originCountry" type="text" autocomplete="country-name" placeholder="Any country" required>
+                    </label>
+                    <label>
+                        Origin city or port
+                        <input name="originPort" type="text" placeholder="City or shipping port" required>
+                    </label>
+                    <label>
+                        Destination country
+                        <input name="destinationCountry" type="text" autocomplete="country-name" required>
+                    </label>
+                    <label>
+                        Destination city or port
+                        <input name="destinationPort" type="text" placeholder="e.g. Tema Port, Ghana" required>
+                    </label>
+                    <label class="software-project-description">
+                        Additional details (optional)
+                        <textarea name="details" rows="3" placeholder="Share any other information that may help us check the costs."></textarea>
+                    </label>
+                </div>
+                <button class="car-cta-button" type="submit">Send request — GH¢100 information fee</button>
+                <p class="software-project-status" id="carCostInfoStatus" aria-live="polite"></p>
+            </form>
         </div>
     </section>
 

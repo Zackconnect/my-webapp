@@ -433,8 +433,11 @@ function getMediaDatabase() {
 
 async function saveMediaFile(file, kind) {
     const maxBytes = kind === 'video' ? 100 * 1024 * 1024 : 15 * 1024 * 1024;
-    if (!file.type.startsWith(`${kind}/`)) {
-        throw new Error(`Choose a valid ${kind} file.`);
+    const isValidType = kind === 'pdf'
+        ? file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+        : file.type.startsWith(`${kind}/`);
+    if (!isValidType) {
+        throw new Error(kind === 'pdf' ? 'Choose a valid PDF file.' : `Choose a valid ${kind} file.`);
     }
     if (file.size > maxBytes) {
         throw new Error(`${file.name} is too large. Maximum ${kind} size is ${kind === 'video' ? '100 MB' : '15 MB'}.`);
@@ -588,6 +591,10 @@ async function renderCars(condition = 'All') {
             .join(' • ');
         info.append(createElement('p', 'car-details', specs));
         card.append(info);
+        const requestButton = createElement('button', 'car-request-button', 'Import this car');
+        requestButton.type = 'button';
+        requestButton.dataset.carName = car.name;
+        card.append(requestButton);
         grid.append(card);
     }
 }
@@ -644,9 +651,15 @@ async function renderTricycles(condition = 'All') {
 
         const footer = createElement('div', 'tricycle-footer');
         footer.append(createElement('p', 'tricycle-price', tricycle.price));
+        const actions = createElement('div', 'tricycle-card-actions');
         const enquireLink = createElement('a', 'tricycle-enquire', 'Enquire');
         enquireLink.href = 'enquire.html';
-        footer.append(enquireLink);
+        actions.append(enquireLink);
+        const buyButton = createElement('button', 'tricycle-buy-button', 'Buy');
+        buyButton.type = 'button';
+        buyButton.dataset.tricycleId = tricycle.id;
+        actions.append(buyButton);
+        footer.append(actions);
         info.append(footer);
         card.append(info);
         grid.append(card);
@@ -656,6 +669,73 @@ async function renderTricycles(condition = 'All') {
 renderBundles();
 renderCars();
 renderTricycles();
+
+const startTricyclePurchaseButton = document.getElementById('startTricyclePurchase');
+const tricyclePurchaseForm = document.getElementById('tricyclePurchaseForm');
+if (startTricyclePurchaseButton && tricyclePurchaseForm) {
+    const tricycleSelection = document.getElementById('tricyclePurchaseSelection');
+    const status = document.getElementById('tricyclePurchaseStatus');
+
+    function openTricyclePurchaseForm(tricycleId = '') {
+        tricycleSelection.replaceChildren(new Option('Select a tricycle', ''));
+        for (const tricycle of tricycleCatalog) {
+            tricycleSelection.add(new Option(`${tricycle.name} — ${tricycle.price}`, tricycle.id));
+        }
+        tricycleSelection.value = tricycleId;
+        tricyclePurchaseForm.classList.remove('hidden');
+        startTricyclePurchaseButton.setAttribute('aria-expanded', 'true');
+        tricyclePurchaseForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    startTricyclePurchaseButton.addEventListener('click', () => openTricyclePurchaseForm());
+    document.querySelector('.tricycle-grid')?.addEventListener('click', (event) => {
+        const button = event.target.closest('.tricycle-buy-button');
+        if (button) openTricyclePurchaseForm(button.dataset.tricycleId);
+    });
+
+    tricyclePurchaseForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const submitButton = tricyclePurchaseForm.querySelector('button[type="submit"]');
+        const values = new FormData(tricyclePurchaseForm);
+        const selectedTricycle = tricycleCatalog.find(item => item.id === values.get('tricycleId'));
+        if (!selectedTricycle) {
+            setStatus(status, 'Select a tricycle to continue.', true);
+            return;
+        }
+
+        submitButton.disabled = true;
+        setStatus(status, '');
+        try {
+            const enquiries = loadCatalog('zackconnect-enquiries', []);
+            const details = String(values.get('details') || '').trim();
+            enquiries.unshift({
+                id: `enquiry-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                name: String(values.get('name') || '').trim(),
+                phone: String(values.get('phone') || '').trim(),
+                email: String(values.get('email') || '').trim(),
+                service: 'Tricycle Purchase',
+                message: [
+                    `Tricycle: ${selectedTricycle.name}`,
+                    `Price: ${selectedTricycle.price}`,
+                    `Condition: ${selectedTricycle.condition}`,
+                    `Year: ${selectedTricycle.year}`,
+                    `Delivery location: ${String(values.get('deliveryLocation') || '').trim()}`,
+                    details ? `Additional details: ${details}` : ''
+                ].filter(Boolean).join('\n'),
+                status: 'Pending',
+                submittedAt: new Date().toISOString()
+            });
+            saveCatalog('zackconnect-enquiries', enquiries);
+            tricyclePurchaseForm.reset();
+            setStatus(status, 'Your purchase request has been sent. Our team will contact you about availability and payment.');
+        } catch (error) {
+            console.error('Unable to submit tricycle purchase request.', error);
+            setStatus(status, error.message || 'Unable to send your purchase request. Please try again.', true);
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+}
 
 document.querySelectorAll('.network-button').forEach((button) => {
     button.addEventListener('click', () => {
@@ -1159,6 +1239,250 @@ if (enquiryForm) {
     });
 }
 
+const startSoftwareProjectButton = document.getElementById('startSoftwareProject');
+const softwareProjectForm = document.getElementById('softwareProjectForm');
+if (startSoftwareProjectButton && softwareProjectForm) {
+    const status = document.getElementById('softwareProjectStatus');
+    startSoftwareProjectButton.addEventListener('click', () => {
+        const isOpen = !softwareProjectForm.classList.contains('hidden');
+        softwareProjectForm.classList.toggle('hidden', isOpen);
+        startSoftwareProjectButton.setAttribute('aria-expanded', String(!isOpen));
+        if (!isOpen) {
+            softwareProjectForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+
+    softwareProjectForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const submitButton = softwareProjectForm.querySelector('button[type="submit"]');
+        const values = new FormData(softwareProjectForm);
+        const brief = values.get('brief');
+        let briefMediaId = '';
+        submitButton.disabled = true;
+        setStatus(status, '');
+        try {
+            if (brief instanceof File && brief.size > 0) {
+                briefMediaId = await saveMediaFile(brief, 'pdf');
+            }
+            const projects = loadCatalog('zackconnect-software-projects', []);
+            projects.unshift({
+                id: `software-project-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                name: String(values.get('name') || '').trim(),
+                email: String(values.get('email') || '').trim(),
+                phone: String(values.get('phone') || '').trim(),
+                projectName: String(values.get('projectName') || '').trim(),
+                description: String(values.get('description') || '').trim(),
+                briefMediaId,
+                briefName: brief instanceof File ? brief.name : '',
+                submittedAt: new Date().toISOString()
+            });
+            try {
+                saveCatalog('zackconnect-software-projects', projects);
+            } catch (error) {
+                if (briefMediaId) await deleteMediaFile(briefMediaId);
+                throw error;
+            }
+            softwareProjectForm.reset();
+            setStatus(status, 'Your software project request has been sent successfully.');
+        } catch (error) {
+            console.error('Unable to submit software project request.', error);
+            setStatus(status, error.message || 'Unable to submit your project request. Please try again.', true);
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+}
+
+const startCarImportButton = document.getElementById('startCarImport');
+const requestImportCostsButton = document.getElementById('requestImportCosts');
+const carImportRequestForm = document.getElementById('carImportRequestForm');
+if (startCarImportButton && carImportRequestForm) {
+    const status = document.getElementById('carImportRequestStatus');
+    const requestTypeInput = carImportRequestForm.querySelector('[name="requestType"]');
+    const requestTitle = document.getElementById('carImportRequestTitle');
+    const requestDescription = document.getElementById('carImportRequestDescription');
+    const submitButton = document.getElementById('carImportSubmit');
+    const carMakeInput = carImportRequestForm.querySelector('[name="carMake"]');
+    const carModelInput = carImportRequestForm.querySelector('[name="carModel"]');
+    const carModelSuggestions = document.getElementById('carModelSuggestions');
+    const carModelsByMake = {
+        Jetour: ['X50', 'X70', 'X70 Plus', 'X90 Plus', 'Dashing', 'T2', 'X90 Pro', 'Shanhai L6', 'Shanhai L7'],
+        Changan: ['Alsvin', 'Eado', 'CS15', 'CS35 Plus', 'CS55 Plus', 'CS75 Plus', 'CS95', 'UNI-T', 'UNI-V', 'Hunter', 'Kaicene Star'],
+        Aion: ['Y', 'S', 'V', 'LX'],
+        Avatr: ['06', '07', '11', '12'],
+        BAIC: ['X35', 'X55', 'X7', 'BJ40'],
+        Baojun: ['Yep', 'KiWi EV', '510', '530'],
+        Bestune: ['T55', 'T77', 'T90', 'B70'],
+        BYD: ['Seagull', 'Dolphin', 'Atto 3', 'Yuan Plus', 'Song Plus', 'Qin Plus', 'Seal', 'Tang'],
+        Chery: ['Tiggo 2 Pro', 'Tiggo 4 Pro', 'Tiggo 7 Pro', 'Tiggo 8 Pro', 'Arrizo 5'],
+        Deepal: ['S05', 'S07', 'S09', 'L07', 'G318'],
+        Denza: ['D9', 'N7', 'N8', 'Z9 GT'],
+        DFSK: ['Glory 500', 'Glory 580', 'Glory 560', 'C31', 'C32'],
+        Dongfeng: ['Aeolus Shine', 'Mage', 'Huge', 'Rich 6'],
+        Exeed: ['LX', 'TXL', 'RX', 'VX'],
+        FAW: ['T77', 'T99', 'Bestune B70', 'J6'],
+        Foton: ['Tunland', 'View CS2', 'Toano', 'Gratour'],
+        GAC: ['GS3', 'GS4', 'GS8', 'Empow', 'Aion Y'],
+        Geely: ['X3 Pro', 'Coolray', 'Emgrand', 'Starray', 'Monjaro', 'Geometry C'],
+        'Great Wall': ['Poer', 'Wingle 5', 'Wingle 7'],
+        Haval: ['Jolion', 'H6', 'H6 HEV', 'H9', 'Dargo'],
+        Hongqi: ['H5', 'H6', 'HS3', 'HS5', 'HS7'],
+        JAC: ['S2', 'S3', 'JS4', 'JS6', 'T8', 'T9'],
+        Jaecoo: ['J5', 'J7', 'J8'],
+        Leapmotor: ['T03', 'C10', 'C11', 'C16'],
+        'Li Auto': ['L6', 'L7', 'L8', 'L9'],
+        'Lynk & Co': ['06', '08', '09', 'Z20'],
+        Maxus: ['G50', 'G90', 'T60', 'T90', 'D60'],
+        Neta: ['AYA', 'X', 'L', 'S'],
+        NIO: ['ET5', 'ET5 Touring', 'ET7', 'ES6', 'EL6', 'EC6'],
+        Omoda: ['C5', 'C7', 'E5'],
+        Seres: ['3', '5', '7'],
+        Soueast: ['S06', 'S07', 'S09'],
+        Tank: ['300', '400', '500', '700'],
+        Wuling: ['Hongguang Mini EV', 'Bingo', 'Starlight', 'Asta'],
+        XPeng: ['M03', 'G6', 'G9', 'P7+', 'X9'],
+        Zeekr: ['001', '007', '7X', '009', 'X']
+    };
+
+    function updateCarModelSuggestions() {
+        carModelSuggestions.replaceChildren();
+        for (const model of carModelsByMake[carMakeInput.value] || []) {
+            const option = document.createElement('option');
+            option.value = model;
+            carModelSuggestions.append(option);
+        }
+    }
+
+    carMakeInput.addEventListener('change', updateCarModelSuggestions);
+
+    function openCarImportForm(requestType, carName = '') {
+        requestTypeInput.value = requestType;
+        const isEstimate = requestType === 'estimate';
+        requestTitle.textContent = isEstimate ? 'Request an import cost estimate' : 'Tell us what car you’re looking for';
+        requestDescription.textContent = isEstimate
+            ? 'Share the vehicle and destination port. We’ll prepare an estimate covering port charges, import charges, and shipping insurance.'
+            : 'Share your contact details, budget, and preferred car. We’ll get in touch to discuss your import and related charges.';
+        submitButton.textContent = isEstimate ? 'Request charges & insurance estimate' : 'Send car import request';
+        if (carName) {
+            const make = Array.from(carMakeInput.options)
+                .find(option => option.value !== 'Other' && carName.toLowerCase().startsWith(`${option.value.toLowerCase()} `));
+            carMakeInput.value = make ? make.value : 'Other';
+            updateCarModelSuggestions();
+            carModelInput.value = make ? carName.slice(make.value.length).trim() : carName;
+        }
+        carImportRequestForm.classList.remove('hidden');
+        startCarImportButton.setAttribute('aria-expanded', 'true');
+        requestImportCostsButton.setAttribute('aria-expanded', 'true');
+        carImportRequestForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    startCarImportButton.addEventListener('click', () => openCarImportForm('import'));
+    requestImportCostsButton.addEventListener('click', () => openCarImportForm('estimate'));
+
+    document.querySelector('.car-grid')?.addEventListener('click', (event) => {
+        const button = event.target.closest('.car-request-button');
+        if (button) openCarImportForm('import', button.dataset.carName);
+    });
+
+    carImportRequestForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const values = new FormData(carImportRequestForm);
+        const budget = Number(values.get('budget'));
+        if (!Number.isFinite(budget) || budget <= 0) {
+            setStatus(status, 'Enter a valid budget greater than zero.', true);
+            return;
+        }
+        submitButton.disabled = true;
+        setStatus(status, '');
+        try {
+            const enquiries = loadCatalog('zackconnect-enquiries', []);
+            const preferences = String(values.get('preferences') || '').trim();
+            const isEstimate = values.get('requestType') === 'estimate';
+            const message = [
+                `Request: ${isEstimate ? 'Import cost estimate' : 'Car import'}`,
+                `Budget: ${String(values.get('currency') || '').trim()} ${budget.toLocaleString()}`,
+                `Car wanted: ${String(values.get('carMake') || '').trim()} ${String(values.get('carModel') || '').trim()}`,
+                `Import from: ${String(values.get('importCountry') || '').trim()}`,
+                `Destination port: ${String(values.get('destinationPort') || '').trim()}`,
+                'Estimate requested for: port charges, import charges, and shipping insurance',
+                `Type: ${String(values.get('carType') || '').trim()}`,
+                `Condition: ${String(values.get('condition') || '').trim()}`,
+                preferences ? `Additional preferences: ${preferences}` : ''
+            ].filter(Boolean).join('\n');
+            enquiries.unshift({
+                id: `enquiry-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                name: String(values.get('name') || '').trim(),
+                phone: String(values.get('phone') || '').trim(),
+                email: String(values.get('email') || '').trim(),
+                service: isEstimate ? 'Car Import Cost Estimate' : 'Car Import',
+                message,
+                status: 'Pending',
+                submittedAt: new Date().toISOString()
+            });
+            saveCatalog('zackconnect-enquiries', enquiries);
+            carImportRequestForm.reset();
+            setStatus(status, 'Your car import request has been sent successfully.');
+        } catch (error) {
+            console.error('Unable to submit car import request.', error);
+            setStatus(status, error.message || 'Unable to submit your car import request. Please try again.', true);
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+}
+
+const openCarCostInfoFormButton = document.getElementById('openCarCostInfoForm');
+const carCostInfoForm = document.getElementById('carCostInfoForm');
+if (openCarCostInfoFormButton && carCostInfoForm) {
+    const status = document.getElementById('carCostInfoStatus');
+    openCarCostInfoFormButton.addEventListener('click', () => {
+        const isOpen = !carCostInfoForm.classList.contains('hidden');
+        carCostInfoForm.classList.toggle('hidden', isOpen);
+        openCarCostInfoFormButton.setAttribute('aria-expanded', String(!isOpen));
+        if (!isOpen) carCostInfoForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    carCostInfoForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const submitButton = carCostInfoForm.querySelector('button[type="submit"]');
+        const values = new FormData(carCostInfoForm);
+        submitButton.disabled = true;
+        setStatus(status, '');
+        try {
+            const enquiries = loadCatalog('zackconnect-enquiries', []);
+            const details = String(values.get('details') || '').trim();
+            const message = [
+                'Request: Worldwide car import cost information',
+                'Information fee: GH¢100 (payment to be arranged separately; not paid through this form)',
+                `Vehicle: ${String(values.get('vehicle') || '').trim()} (${String(values.get('vehicleYear') || '').trim()})`,
+                `Vehicle purchase price: ${String(values.get('vehiclePrice') || '').trim() || 'Not provided'}`,
+                `Shipping from: ${String(values.get('originPort') || '').trim()}, ${String(values.get('originCountry') || '').trim()}`,
+                `Shipping to: ${String(values.get('destinationPort') || '').trim()}, ${String(values.get('destinationCountry') || '').trim()}`,
+                'Information requested: import charges, customs clearance, and shipping fees',
+                details ? `Additional details: ${details}` : ''
+            ].filter(Boolean).join('\n');
+            enquiries.unshift({
+                id: `enquiry-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                name: String(values.get('name') || '').trim(),
+                phone: String(values.get('phone') || '').trim(),
+                email: String(values.get('email') || '').trim(),
+                service: 'Worldwide Import Cost Information — GH¢100',
+                message,
+                status: 'Pending',
+                submittedAt: new Date().toISOString()
+            });
+            saveCatalog('zackconnect-enquiries', enquiries);
+            carCostInfoForm.reset();
+            setStatus(status, 'Your request has been sent to our admin team. The GH¢100 information fee will be arranged separately.');
+        } catch (error) {
+            console.error('Unable to submit worldwide import cost information request.', error);
+            setStatus(status, error.message || 'Unable to submit your request. Please try again.', true);
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+}
+
 const adminEnquiriesList = document.getElementById('adminEnquiriesList');
 if (adminEnquiriesList) {
     const count = document.getElementById('newEnquiriesCount');
@@ -1219,6 +1543,65 @@ if (adminEnquiriesList) {
         if (event.key === 'zackconnect-enquiries') renderEnquiries();
     });
     renderEnquiries();
+}
+
+const adminSoftwareProjectsList = document.getElementById('adminSoftwareProjectsList');
+if (adminSoftwareProjectsList) {
+    const status = document.getElementById('adminSoftwareProjectsStatus');
+    function renderSoftwareProjects() {
+        adminSoftwareProjectsList.replaceChildren();
+        const projects = loadCatalog('zackconnect-software-projects', []);
+        if (!projects.length) {
+            adminSoftwareProjectsList.append(createElement('p', 'admin-empty-enquiries', 'No software project requests have been submitted yet.'));
+            return;
+        }
+        projects.forEach((project) => {
+            const card = createElement('article', 'software-project-admin-card');
+            const heading = createElement('h3', '', project.projectName);
+            const contact = createElement('p', 'software-project-admin-contact',
+                [project.name, project.email, project.phone].filter(Boolean).join(' · '));
+            const description = createElement('p', 'software-project-admin-description', project.description);
+            const submitted = createElement('p', 'software-project-admin-date',
+                `Submitted ${new Date(project.submittedAt).toLocaleString()}`);
+            card.append(heading, contact, description, submitted);
+            if (project.briefMediaId) {
+                const download = createElement('button', 'action-button', `Download PDF${project.briefName ? `: ${project.briefName}` : ''}`);
+                download.type = 'button';
+                download.dataset.briefMediaId = project.briefMediaId;
+                download.dataset.briefName = project.briefName || 'project-brief.pdf';
+                card.append(download);
+            } else {
+                card.append(createElement('p', 'software-project-admin-date', 'No PDF attached.'));
+            }
+            adminSoftwareProjectsList.append(card);
+        });
+    }
+
+    adminSoftwareProjectsList.addEventListener('click', async (event) => {
+        const button = event.target.closest('button[data-brief-media-id]');
+        if (!button) return;
+        button.disabled = true;
+        setStatus(status, '');
+        try {
+            const media = await getMediaFile(button.dataset.briefMediaId);
+            if (!media?.blob) {
+                throw new Error('The attached PDF could not be found in this browser.');
+            }
+            const link = document.createElement('a');
+            link.href = createMediaUrl(media);
+            link.download = button.dataset.briefName || media.name || 'project-brief.pdf';
+            link.click();
+        } catch (error) {
+            console.error('Unable to download software project PDF.', error);
+            setStatus(status, error.message || 'Unable to download the attached PDF.', true);
+        } finally {
+            button.disabled = false;
+        }
+    });
+    window.addEventListener('storage', (event) => {
+        if (event.key === 'zackconnect-software-projects') renderSoftwareProjects();
+    });
+    renderSoftwareProjects();
 }
 
 window.addEventListener('storage', (event) => {
