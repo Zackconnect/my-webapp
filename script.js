@@ -797,6 +797,13 @@ function setStatus(element, message, isError = false) {
     element.classList.toggle('error', isError);
 }
 
+function createMessageDeliveryTicks(className) {
+    const ticks = createElement('span', className, '✓✓');
+    ticks.setAttribute('aria-label', 'Delivered');
+    ticks.title = 'Delivered';
+    return ticks;
+}
+
 const bundleAdminForm = document.getElementById('bundleAdminForm');
 if (bundleAdminForm) {
     const bundleAdminId = document.getElementById('bundleAdminId');
@@ -1239,6 +1246,292 @@ if (enquiryForm) {
     });
 }
 
+const bundleSupportForm = document.getElementById('bundleSupportForm');
+const bundleSupportLauncher = document.getElementById('bundleSupportLauncher');
+const bundleSupportPanel = document.getElementById('bundleSupportPanel');
+const bundleSupportClose = document.getElementById('bundleSupportClose');
+if (bundleSupportForm && bundleSupportLauncher && bundleSupportPanel && bundleSupportClose) {
+    const status = document.getElementById('bundleSupportStatus');
+    const contactView = document.getElementById('bundleSupportContactView');
+    const inbox = document.getElementById('bundleSupportInbox');
+    const chatClose = document.getElementById('bundleChatClose');
+    const chatCompose = document.getElementById('bundleChatCompose');
+    const chatSearch = document.getElementById('bundleChatSearch');
+    const chatTabs = Array.from(inbox.querySelectorAll('[data-chat-tab]'));
+    const chatPanels = Array.from(inbox.querySelectorAll('[data-chat-panel]'));
+    const chatSettingsForm = document.getElementById('bundleChatSettingsForm');
+    const chatSettingsStatus = document.getElementById('bundleChatSettingsStatus');
+    const chatSettingsName = document.getElementById('bundleSettingsName');
+    const chatSettingsPhone = document.getElementById('bundleSettingsPhone');
+    const settingsProfile = document.getElementById('bundleSettingsProfile');
+    const settingsProfileName = document.getElementById('bundleSettingsProfileName');
+    const settingsProfilePhone = document.getElementById('bundleSettingsProfilePhone');
+    const settingsAccount = document.getElementById('bundleSettingsAccount');
+    const settingsNotifications = document.getElementById('bundleSettingsNotifications');
+    const callSupportLink = document.getElementById('bundleSupportCallLink');
+    const callHistoryList = document.getElementById('bundleCallHistoryList');
+    const callHistoryEmpty = document.getElementById('bundleCallEmpty');
+    const callHistoryKey = 'zackconnect-bundle-call-history';
+    const chatRow = document.getElementById('bundleSupportChatRow');
+    const chatPreview = document.getElementById('bundleChatPreview');
+    const chatEmpty = document.getElementById('bundleChatEmpty');
+    const conversation = document.getElementById('bundleSupportConversation');
+    const conversationMessages = document.getElementById('bundleConversationMessages');
+    const conversationForm = document.getElementById('bundleConversationForm');
+    const conversationInput = document.getElementById('bundleConversationInput');
+    const conversationBack = document.getElementById('bundleConversationBack');
+    const conversationClose = document.getElementById('bundleConversationClose');
+    const supportMessagesKey = 'zackconnect-bundle-support-chat';
+    let supportMessages = loadCatalog(supportMessagesKey, []);
+    const supportContactKey = 'zackconnect-bundle-support-contact';
+    const storedSupportContacts = loadCatalog(supportContactKey, []);
+    let supportContact = storedSupportContacts[0] || supportMessages.find(message => message.name && message.phone) || null;
+    let activeView = supportContact ? 'inbox' : 'contact';
+
+    function renderSupportMessages() {
+        conversationMessages.replaceChildren();
+        supportMessages.forEach((message) => {
+            const bubble = document.createElement('div');
+            bubble.className = `bundle-message-bubble ${message.direction === 'outgoing' ? 'outgoing' : 'incoming'}`;
+            const text = document.createElement('p');
+            text.textContent = message.text;
+            const time = document.createElement('time');
+            time.dateTime = message.sentAt;
+            time.textContent = new Date(message.sentAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            bubble.append(text, time);
+            if (message.direction === 'outgoing') {
+                bubble.append(createMessageDeliveryTicks('bundle-message-status'));
+            }
+            conversationMessages.append(bubble);
+        });
+        conversationMessages.scrollTop = conversationMessages.scrollHeight;
+        if (supportMessages.length) {
+            const lastMessage = supportMessages[supportMessages.length - 1];
+            chatPreview.textContent = lastMessage.text;
+        }
+    }
+
+    function saveSupportMessage(text, name, phone) {
+        const enquiries = loadCatalog('zackconnect-enquiries', []);
+        enquiries.unshift({
+            id: `enquiry-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            name,
+            phone,
+            email: '',
+            service: 'Data Bundle Support Chat',
+            message: text,
+            status: 'Pending',
+            submittedAt: new Date().toISOString()
+        });
+        saveCatalog('zackconnect-enquiries', enquiries);
+
+        const message = {
+            direction: 'outgoing',
+            text,
+            name,
+            phone,
+            sentAt: new Date().toISOString()
+        };
+        supportMessages.push(message);
+        saveCatalog(supportMessagesKey, supportMessages);
+        chatPreview.textContent = text;
+        renderSupportMessages();
+    }
+
+    function setBundleSupportOpen(isOpen) {
+        if (!isOpen && activeView === 'conversation') {
+            activeView = 'inbox';
+            bundleSupportPanel.classList.remove('is-conversation');
+            conversation.classList.add('hidden');
+        }
+        bundleSupportPanel.classList.toggle('hidden', !isOpen);
+        bundleSupportPanel.parentElement.classList.toggle('is-open', isOpen);
+        document.body.classList.toggle('bundle-support-open', isOpen);
+        bundleSupportLauncher.setAttribute('aria-expanded', String(isOpen));
+        if (isOpen && activeView === 'inbox') chatSearch.focus();
+        else if (isOpen) bundleSupportClose.focus();
+        else bundleSupportLauncher.focus();
+    }
+
+    function showBundleSupportView(view) {
+        activeView = view;
+        const showInbox = view === 'inbox';
+        contactView.classList.toggle('hidden', showInbox);
+        inbox.classList.toggle('hidden', !showInbox);
+        conversation.classList.add('hidden');
+        bundleSupportPanel.classList.toggle('is-inbox', showInbox);
+        bundleSupportPanel.classList.remove('is-conversation');
+        if (showInbox) chatSearch.focus();
+        else bundleSupportClose.focus();
+    }
+
+    function showSupportConversation() {
+        activeView = 'conversation';
+        inbox.classList.remove('hidden');
+        conversation.classList.remove('hidden');
+        bundleSupportPanel.classList.add('is-inbox', 'is-conversation');
+        renderSupportMessages();
+        conversationInput.focus();
+    }
+
+    function selectChatTab(tabName) {
+        chatTabs.forEach((tab) => {
+            const isActive = tab.dataset.chatTab === tabName;
+            tab.classList.toggle('active', isActive);
+            if (isActive) tab.setAttribute('aria-current', 'page');
+            else tab.removeAttribute('aria-current');
+        });
+        chatPanels.forEach((panel) => {
+            panel.classList.toggle('hidden', panel.dataset.chatPanel !== tabName);
+        });
+        inbox.classList.toggle('showing-chats', tabName === 'chats');
+        inbox.classList.toggle('showing-settings', tabName === 'settings');
+        if (tabName === 'settings') {
+            chatSettingsName.value = supportContact?.name || '';
+            chatSettingsPhone.value = supportContact?.phone || '';
+            settingsProfileName.textContent = supportContact?.name || 'Your profile';
+            settingsProfilePhone.textContent = supportContact?.phone || 'Add a phone number';
+            setStatus(chatSettingsStatus, '');
+        }
+        if (tabName === 'chats') chatSearch.focus();
+    }
+
+    function renderCallHistory() {
+        const calls = loadCatalog(callHistoryKey, []);
+        callHistoryList.replaceChildren();
+        callHistoryEmpty.classList.toggle('hidden', calls.length > 0);
+        calls.forEach((call) => {
+            const entry = createElement('article', 'bundle-call-history-entry');
+            entry.append(
+                createElement('span', 'bundle-call-history-icon', '↗'),
+                createElement('span', 'bundle-call-history-description', `Outgoing call · ${call.number}`),
+                createElement('time', 'bundle-call-history-time',
+                    new Date(call.startedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }))
+            );
+            callHistoryList.append(entry);
+        });
+    }
+
+    renderSupportMessages();
+    renderCallHistory();
+    const notificationPreference = loadCatalog('zackconnect-bundle-support-notifications', [false]);
+    const notificationsEnabled = notificationPreference[0] === true;
+    settingsNotifications.setAttribute('aria-checked', String(notificationsEnabled));
+    settingsNotifications.classList.toggle('enabled', notificationsEnabled);
+    showBundleSupportView(activeView);
+    selectChatTab('chats');
+    bundleSupportLauncher.addEventListener('click', () => {
+        setBundleSupportOpen(bundleSupportPanel.classList.contains('hidden'));
+    });
+    bundleSupportClose.addEventListener('click', () => setBundleSupportOpen(false));
+    chatClose.addEventListener('click', () => setBundleSupportOpen(false));
+    chatCompose.addEventListener('click', () => {
+        if (supportContact) {
+            showSupportConversation();
+        } else {
+            bundleSupportForm.reset();
+            setStatus(status, '');
+            showBundleSupportView('contact');
+        }
+    });
+    chatSearch.addEventListener('input', () => {
+        const matches = 'support team'.includes(chatSearch.value.trim().toLowerCase());
+        chatRow.classList.toggle('hidden', !matches);
+        chatEmpty.classList.toggle('hidden', matches);
+    });
+    chatTabs.forEach((tab) => {
+        tab.addEventListener('click', () => selectChatTab(tab.dataset.chatTab));
+    });
+    function toggleSettingsAccountEditor() {
+        const isExpanded = settingsAccount.getAttribute('aria-expanded') === 'true';
+        settingsAccount.setAttribute('aria-expanded', String(!isExpanded));
+        settingsProfile.setAttribute('aria-expanded', String(!isExpanded));
+        chatSettingsForm.classList.toggle('hidden', isExpanded);
+        if (!isExpanded) chatSettingsName.focus();
+    }
+    settingsProfile.addEventListener('click', toggleSettingsAccountEditor);
+    settingsAccount.addEventListener('click', toggleSettingsAccountEditor);
+    settingsNotifications.addEventListener('click', () => {
+        const isEnabled = settingsNotifications.getAttribute('aria-checked') === 'true';
+        const nextValue = !isEnabled;
+        saveCatalog('zackconnect-bundle-support-notifications', [nextValue]);
+        settingsNotifications.setAttribute('aria-checked', String(nextValue));
+        settingsNotifications.classList.toggle('enabled', nextValue);
+    });
+    callSupportLink.addEventListener('click', () => {
+        const calls = loadCatalog(callHistoryKey, []);
+        calls.unshift({
+            number: '+233 24 373 9221',
+            startedAt: new Date().toISOString()
+        });
+        saveCatalog(callHistoryKey, calls.slice(0, 20));
+        renderCallHistory();
+    });
+    chatSettingsForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        try {
+            supportContact = {
+                name: chatSettingsName.value.trim(),
+                phone: chatSettingsPhone.value.trim()
+            };
+            saveCatalog(supportContactKey, [supportContact]);
+            settingsProfileName.textContent = supportContact.name;
+            settingsProfilePhone.textContent = supportContact.phone;
+            setStatus(chatSettingsStatus, 'Your contact details have been updated.');
+        } catch (error) {
+            console.error('Unable to update support chat contact details.', error);
+            setStatus(chatSettingsStatus, error.message || 'Unable to save your details. Please try again.', true);
+        }
+    });
+    chatRow.addEventListener('click', showSupportConversation);
+    conversationBack.addEventListener('click', () => showBundleSupportView('inbox'));
+    conversationClose.addEventListener('click', () => setBundleSupportOpen(false));
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !bundleSupportPanel.classList.contains('hidden')) {
+            setBundleSupportOpen(false);
+        }
+    });
+    bundleSupportForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const values = new FormData(bundleSupportForm);
+        try {
+            supportContact = {
+                name: String(values.get('name') || '').trim(),
+                phone: String(values.get('phone') || '').trim()
+            };
+            saveCatalog(supportContactKey, [supportContact]);
+            bundleSupportForm.reset();
+            setBundleSupportOpen(true);
+            showBundleSupportView('inbox');
+        } catch (error) {
+            console.error('Unable to send data bundle support message.', error);
+            setStatus(status, error.message || 'Unable to send your message. Please try again.', true);
+        }
+    });
+    conversationForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const message = conversationInput.value.trim();
+        if (!message) return;
+        if (!supportContact) {
+            showBundleSupportView('contact');
+            setStatus(status, 'Please enter your name and phone number before messaging support.', true);
+            return;
+        }
+        try {
+            saveSupportMessage(message, supportContact.name, supportContact.phone);
+            conversationForm.reset();
+        } catch (error) {
+            console.error('Unable to send data bundle support chat message.', error);
+            setStatus(status, error.message || 'Unable to send your message. Please try again.', true);
+        }
+    });
+    window.addEventListener('storage', (event) => {
+        if (event.key !== supportMessagesKey) return;
+        supportMessages = loadCatalog(supportMessagesKey, []);
+        renderSupportMessages();
+    });
+}
+
 const startSoftwareProjectButton = document.getElementById('startSoftwareProject');
 const softwareProjectForm = document.getElementById('softwareProjectForm');
 if (startSoftwareProjectButton && softwareProjectForm) {
@@ -1543,6 +1836,159 @@ if (adminEnquiriesList) {
         if (event.key === 'zackconnect-enquiries') renderEnquiries();
     });
     renderEnquiries();
+}
+
+const adminSupportChatList = document.getElementById('adminSupportChatList');
+if (adminSupportChatList) {
+    const supportMessagesKey = 'zackconnect-bundle-support-chat';
+    const supportContactKey = 'zackconnect-bundle-support-contact';
+    const supportConversationMessages = document.getElementById('adminSupportMessages');
+    const customerName = document.getElementById('adminSupportCustomerName');
+    const customerPhone = document.getElementById('adminSupportCustomerPhone');
+    const replyForm = document.getElementById('adminSupportReplyForm');
+    const replyInput = document.getElementById('adminSupportReplyInput');
+    const replyButton = document.getElementById('adminSupportReplyButton');
+    const status = document.getElementById('adminSupportStatus');
+    let supportMessages = loadCatalog(supportMessagesKey, []);
+    let supportContacts = loadCatalog(supportContactKey, []);
+    if (!supportContacts.length) {
+        supportContacts = Array.from(new Map(
+            supportMessages
+                .filter(message => message.phone)
+                .map(message => [message.phone, { name: message.name || 'Customer', phone: message.phone }])
+        ).values());
+    }
+    let selectedContact = null;
+
+    function renderSupportConversation() {
+        supportConversationMessages.replaceChildren();
+        if (!selectedContact) {
+            supportConversationMessages.append(
+                createElement('p', 'admin-empty-enquiries', 'Select a customer chat to read and reply.')
+            );
+            return;
+        }
+
+        const customerMessages = supportMessages.filter(message => message.phone === selectedContact.phone);
+        if (!customerMessages.length) {
+            supportConversationMessages.append(
+                createElement('p', 'admin-empty-enquiries', 'No messages yet. You can send the first reply.')
+            );
+            return;
+        }
+
+        customerMessages.forEach((message) => {
+            const bubble = createElement(
+                'article',
+                `admin-support-message ${message.direction === 'incoming' ? 'from-admin' : 'from-customer'}`
+            );
+            bubble.append(
+                createElement('p', 'admin-support-message-text', message.text),
+                createElement('time', 'admin-support-message-time',
+                    new Date(message.sentAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }))
+            );
+            if (message.direction === 'incoming') {
+                bubble.append(createMessageDeliveryTicks('admin-support-message-status'));
+            }
+            supportConversationMessages.append(bubble);
+        });
+        supportConversationMessages.scrollTop = supportConversationMessages.scrollHeight;
+    }
+
+    function renderSupportChatList() {
+        adminSupportChatList.replaceChildren();
+        if (!supportContacts.length) {
+            adminSupportChatList.append(
+                createElement('p', 'admin-empty-enquiries', 'No customer support chats yet.')
+            );
+            selectedContact = null;
+            customerName.textContent = 'Support Team';
+            customerPhone.textContent = 'Select a conversation';
+            replyInput.disabled = true;
+            replyButton.disabled = true;
+            renderSupportConversation();
+            return;
+        }
+
+        supportContacts.forEach((contact) => {
+            const messages = supportMessages.filter(message => message.phone === contact.phone);
+            const latestMessage = messages[messages.length - 1];
+            const button = createElement('button', 'admin-support-chat-item');
+            button.type = 'button';
+            button.classList.toggle('active', selectedContact?.phone === contact.phone);
+            button.dataset.supportPhone = contact.phone;
+            button.append(
+                createElement('span', 'admin-support-avatar', (contact.name || 'S').charAt(0).toUpperCase())
+            );
+            const details = createElement('span', 'admin-support-chat-item-details');
+            details.append(
+                createElement('strong', '', contact.name || 'Customer'),
+                createElement('span', '', latestMessage?.text || contact.phone)
+            );
+            button.append(details);
+            adminSupportChatList.append(button);
+        });
+
+        if (!selectedContact || !supportContacts.some(contact => contact.phone === selectedContact.phone)) {
+            selectedContact = supportContacts[0];
+        }
+        customerName.textContent = selectedContact.name || 'Customer';
+        customerPhone.textContent = selectedContact.phone;
+        replyInput.disabled = false;
+        replyButton.disabled = false;
+        renderSupportConversation();
+    }
+
+    adminSupportChatList.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-support-phone]');
+        if (!button) return;
+        selectedContact = supportContacts.find(contact => contact.phone === button.dataset.supportPhone) || null;
+        adminSupportChatList.querySelectorAll('.admin-support-chat-item')
+            .forEach(item => item.classList.toggle('active', item === button));
+        if (selectedContact) {
+            customerName.textContent = selectedContact.name || 'Customer';
+            customerPhone.textContent = selectedContact.phone;
+            replyInput.disabled = false;
+            replyButton.disabled = false;
+        }
+        renderSupportConversation();
+    });
+
+    replyForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (!selectedContact) return;
+        const text = replyInput.value.trim();
+        if (!text) return;
+        try {
+            supportMessages.push({
+                direction: 'incoming',
+                text,
+                name: selectedContact.name,
+                phone: selectedContact.phone,
+                sentAt: new Date().toISOString()
+            });
+            saveCatalog(supportMessagesKey, supportMessages);
+            replyForm.reset();
+            setStatus(status, 'Reply sent.');
+            renderSupportChatList();
+        } catch (error) {
+            console.error('Unable to send support chat reply.', error);
+            setStatus(status, error.message || 'Unable to send your reply. Please try again.', true);
+        }
+    });
+
+    window.addEventListener('storage', (event) => {
+        if (event.key === supportMessagesKey) {
+            supportMessages = loadCatalog(supportMessagesKey, []);
+            renderSupportChatList();
+        }
+        if (event.key === supportContactKey) {
+            supportContacts = loadCatalog(supportContactKey, []);
+            renderSupportChatList();
+        }
+    });
+
+    renderSupportChatList();
 }
 
 const adminSoftwareProjectsList = document.getElementById('adminSoftwareProjectsList');

@@ -91,6 +91,36 @@
         </div>
     </section>
 
+    <section class="admin-catalog-section admin-support-section">
+        <div class="container">
+            <h2 class="admin-section-title">Data bundle support chats</h2>
+            <p class="admin-catalog-description">Read customer messages and reply from the support inbox. With this static site, chats are shared only when the customer and admin use the same browser and site address.</p>
+            <div class="admin-support-inbox">
+                <div class="admin-support-chat-list" id="adminSupportChatList" aria-label="Support conversations"></div>
+                <section class="admin-support-conversation" aria-label="Selected support conversation">
+                    <header class="admin-support-chat-header">
+                        <span class="admin-support-avatar" aria-hidden="true">S</span>
+                        <div>
+                            <h3 id="adminSupportCustomerName">Support Team</h3>
+                            <p id="adminSupportCustomerPhone">Select a conversation</p>
+                        </div>
+                    </header>
+                    <div class="admin-support-messages" id="adminSupportMessages" aria-live="polite">
+                        <p class="admin-empty-enquiries">Select a customer chat to read and reply.</p>
+                    </div>
+                    <form class="admin-support-reply-form" id="adminSupportReplyForm">
+                        <label class="admin-support-reply-field">
+                            <span class="visually-hidden">Write a reply</span>
+                            <input id="adminSupportReplyInput" type="text" placeholder="Write a reply..." aria-label="Write a reply" autocomplete="off" required disabled>
+                        </label>
+                        <button class="action-button" id="adminSupportReplyButton" type="submit" disabled>Reply</button>
+                    </form>
+                    <p class="admin-catalog-status" id="adminSupportStatus" aria-live="polite"></p>
+                </section>
+            </div>
+        </div>
+    </section>
+
     <section class="admin-catalog-section">
         <div class="container">
             <h2 class="admin-section-title">Software project requests</h2>

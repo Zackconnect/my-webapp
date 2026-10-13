@@ -314,7 +314,196 @@
         </div>
     </section>
 
-    <button class="floating-whatsapp" aria-label="Join WhatsApp group">💬</button>
+    <div class="bundle-support-widget">
+        <section class="bundle-support-panel hidden" id="bundleSupportPanel" role="dialog" aria-modal="true" aria-labelledby="bundleSupportTitle">
+            <div class="bundle-support-contact-view" id="bundleSupportContactView">
+                <div class="bundle-support-header">
+                    <div class="bundle-support-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <path d="M4 5.5h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-9l-5 3v-3H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2Z" />
+                            <circle cx="8" cy="12" r="1" />
+                            <circle cx="12" cy="12" r="1" />
+                            <circle cx="16" cy="12" r="1" />
+                        </svg>
+                    </div>
+                    <h2 id="bundleSupportTitle">Zackconnect Support</h2>
+                    <p>Enter your details to continue to support chat.</p>
+                    <button class="bundle-support-close" id="bundleSupportClose" type="button" aria-label="Close support chat">×</button>
+                </div>
+                <form class="bundle-support-form" id="bundleSupportForm">
+                    <label for="bundleSupportName">Your name</label>
+                    <input id="bundleSupportName" name="name" type="text" autocomplete="name" placeholder="Enter your name" required>
+                    <label for="bundleSupportPhone">Phone number</label>
+                    <input id="bundleSupportPhone" name="phone" type="tel" autocomplete="tel" placeholder="e.g., 0241234567" required>
+                    <button class="bundle-support-submit" type="submit">Continue <span aria-hidden="true">→</span></button>
+                    <p class="bundle-support-status" id="bundleSupportStatus" aria-live="polite"></p>
+                    <p class="bundle-support-note">Your phone number helps our admin team follow up with you.</p>
+                </form>
+            </div>
+
+            <div class="bundle-support-inbox hidden" id="bundleSupportInbox">
+                <div class="bundle-chat-toolbar">
+                    <h2 class="bundle-settings-page-title" id="bundleSettingsTitle">Settings</h2>
+                    <label class="bundle-chat-search">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" /><path d="m16 16 5 5" /></svg>
+                        <input id="bundleChatSearch" type="search" placeholder="Search chats..." aria-label="Search chats">
+                    </label>
+                    <button class="bundle-chat-close" id="bundleChatClose" type="button" aria-label="Close support chat">×</button>
+                </div>
+                <div class="bundle-chat-filter-row" id="bundleChatFilterRow">
+                    <button class="bundle-chat-filter" type="button">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v7l-4 2v-9L3 4Z" /></svg>
+                        <span>All Chats</span>
+                    </button>
+                </div>
+                <div class="bundle-chat-content">
+                    <div class="bundle-chat-list" id="bundleChatList" data-chat-panel="chats">
+                        <button class="bundle-chat-row" id="bundleSupportChatRow" type="button">
+                            <span class="bundle-chat-avatar" aria-hidden="true">S</span>
+                            <span class="bundle-chat-summary">
+                                <span class="bundle-chat-name">Support Team</span>
+                                <span class="bundle-chat-preview" id="bundleChatPreview">Tap to start a conversation</span>
+                            </span>
+                            <span class="bundle-chat-time">Just now</span>
+                        </button>
+                        <p class="bundle-chat-empty hidden" id="bundleChatEmpty">No chats match your search.</p>
+                    </div>
+                    <section class="bundle-chat-tab-panel hidden" id="bundleStatusPanel" data-chat-panel="status" aria-labelledby="bundleStatusTitle">
+                        <div class="bundle-chat-status-card">
+                            <span class="bundle-chat-status-icon" aria-hidden="true">✓</span>
+                            <div>
+                                <h2 id="bundleStatusTitle">Your support chat is ready</h2>
+                                <p>Send us a message about your data bundle or payment. Your conversation history stays in Chats.</p>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="bundle-chat-tab-panel hidden" id="bundleCallsPanel" data-chat-panel="calls" aria-labelledby="bundleCallsTitle">
+                        <div class="bundle-chat-call-card">
+                            <span class="bundle-chat-avatar" aria-hidden="true">Z</span>
+                            <div>
+                                <h2 id="bundleCallsTitle">Zackconnect Support</h2>
+                                <p>Call our support team for assistance.</p>
+                                <a class="bundle-chat-call-link" id="bundleSupportCallLink" href="tel:+233243739221">Call +233 24 373 9221</a>
+                            </div>
+                        </div>
+                        <div class="bundle-call-history">
+                            <h3>Recent calls</h3>
+                            <p class="bundle-call-empty" id="bundleCallEmpty">Calls you start from here will appear in this list.</p>
+                            <div class="bundle-call-history-list" id="bundleCallHistoryList"></div>
+                        </div>
+                    </section>
+                    <section class="bundle-chat-tab-panel hidden" id="bundleSettingsPanel" data-chat-panel="settings" aria-labelledby="bundleSettingsTitle">
+                        <div class="bundle-settings-page">
+                            <button class="bundle-settings-profile" id="bundleSettingsProfile" type="button" aria-label="Edit your profile" aria-expanded="false" aria-controls="bundleChatSettingsForm">
+                                <span class="bundle-settings-profile-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 48 48"><circle cx="24" cy="16" r="7" /><path d="M11 39v-4a13 13 0 0 1 26 0v4" /></svg>
+                                </span>
+                                <span class="bundle-settings-profile-copy">
+                                    <strong id="bundleSettingsProfileName">Your profile</strong>
+                                    <span id="bundleSettingsProfilePhone">Add a phone number</span>
+                                    <span>Hey there! I am using Zackconnect</span>
+                                </span>
+                                <span class="bundle-settings-chevron" aria-hidden="true">›</span>
+                            </button>
+
+                            <div class="bundle-settings-notifications">
+                                <span class="bundle-settings-row-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-11.7-1.7M6 10v3l-2 3h16l-2-3v-3a6 6 0 0 0-1-3.3M10 20a2 2 0 0 0 4 0M3 3l18 18" /></svg>
+                                </span>
+                                <span class="bundle-settings-row-copy">
+                                    <strong>Push Notifications</strong>
+                                    <span>Save your notification preference on this device</span>
+                                </span>
+                                <button class="bundle-settings-switch" id="bundleSettingsNotifications" type="button" role="switch" aria-checked="false" aria-label="Push notifications">
+                                    <span></span>
+                                </button>
+                            </div>
+
+                            <div class="bundle-settings-options">
+                                <button class="bundle-settings-option" id="bundleSettingsAccount" type="button" aria-expanded="false" aria-controls="bundleSettingsAccountEditor">
+                                    <strong>Account</strong>
+                                    <span>Privacy, security, change number</span>
+                                </button>
+                                <form class="bundle-chat-settings-form hidden" id="bundleChatSettingsForm">
+                                    <p>Update the contact details our admin team uses to follow up.</p>
+                                    <label for="bundleSettingsName">Your name</label>
+                                    <input id="bundleSettingsName" name="name" type="text" autocomplete="name" required>
+                                    <label for="bundleSettingsPhone">Phone number</label>
+                                    <input id="bundleSettingsPhone" name="phone" type="tel" autocomplete="tel" required>
+                                    <button class="bundle-settings-save" type="submit">Save details</button>
+                                    <p class="bundle-chat-settings-status" id="bundleChatSettingsStatus" aria-live="polite"></p>
+                                </form>
+                                <div class="bundle-settings-option">
+                                    <strong>Chats</strong>
+                                    <span>Theme, wallpapers, chat history</span>
+                                </div>
+                                <div class="bundle-settings-option">
+                                    <strong>Storage and data</strong>
+                                    <span>Network usage, auto-download</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <button class="bundle-chat-compose" id="bundleChatCompose" type="button" aria-label="Start a new chat">+</button>
+                <nav class="bundle-chat-tabs" aria-label="Support chat sections">
+                    <button class="bundle-chat-tab active" type="button" data-chat-tab="chats" aria-current="page">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20l1.2-4.8A8.5 8.5 0 1 1 20.5 11.5Z" /><path d="M8.5 10.5h.01m3.5 0h.01m3.5 0h.01" /></svg>
+                        <span>Chats</span>
+                    </button>
+                    <button class="bundle-chat-tab" type="button" data-chat-tab="status">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="2.5" /></svg>
+                        <span>Status</span>
+                    </button>
+                    <button class="bundle-chat-tab" type="button" data-chat-tab="calls">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5 10 3l2 5-2.4 1.8a15 15 0 0 0 4.6 4.6L16 12l5 2-.5 3.5a3 3 0 0 1-3.3 2.5A17 17 0 0 1 4 6.8a3 3 0 0 1 2.5-3.3Z" /></svg>
+                        <span>Calls</span>
+                    </button>
+                    <button class="bundle-chat-tab" type="button" data-chat-tab="settings">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="m19.4 15 .1.1 1.3 1-1.5 2.6-1.6-.6a8 8 0 0 1-1.7 1l-.3 1.7h-3l-.3-1.7a8 8 0 0 1-1.7-1l-1.6.6-1.5-2.6 1.3-1a8 8 0 0 1 0-2l-1.3-1 1.5-2.6 1.6.6a8 8 0 0 1 1.7-1l.3-1.7h3l.3 1.7a8 8 0 0 1 1.7 1l1.6-.6 1.5 2.6-1.3 1a8 8 0 0 1 0 2Z" /></svg>
+                        <span>Settings</span>
+                    </button>
+                </nav>
+            </div>
+
+            <section class="bundle-support-conversation hidden" id="bundleSupportConversation" aria-label="Conversation with Support Team">
+                <header class="bundle-conversation-header">
+                    <button class="bundle-conversation-back" id="bundleConversationBack" type="button" aria-label="Back to chats">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+                    </button>
+                    <span class="bundle-chat-avatar conversation-avatar" aria-hidden="true">S</span>
+                    <div class="bundle-conversation-title">
+                        <strong>Support Team</strong>
+                        <span>Data bundle assistance</span>
+                    </div>
+                    <button class="bundle-chat-close" id="bundleConversationClose" type="button" aria-label="Close support chat">×</button>
+                </header>
+                <div class="bundle-conversation-body">
+                    <aside class="bundle-pinned-note">
+                        <strong><span aria-hidden="true">◆</span> PINNED SUPPORT NOTE</strong>
+                        <p>Welcome to Zackconnect Support.</p>
+                        <p>For help with a bundle or payment, send your order or payment reference in the chat. Our team will follow up using the phone number you provided.</p>
+                    </aside>
+                    <div class="bundle-conversation-messages" id="bundleConversationMessages" aria-live="polite"></div>
+                </div>
+                <form class="bundle-conversation-composer" id="bundleConversationForm">
+                    <input class="bundle-composer-input" id="bundleConversationInput" name="message" type="text" placeholder="Type a message" aria-label="Type a message" autocomplete="off" required>
+                    <button class="bundle-composer-send" type="submit" aria-label="Send message">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-8-8 18-2.5-7.5L3 11Z" /><path d="m10.5 13.5 4-4" /></svg>
+                    </button>
+                </form>
+            </section>
+        </section>
+        <button class="floating-whatsapp bundle-support-launcher" id="bundleSupportLauncher"
+            type="button" aria-label="Chat with admin" aria-controls="bundleSupportPanel" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4 5.5h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-9l-5 3v-3H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2Z" />
+                <circle cx="8" cy="12" r="1" />
+                <circle cx="12" cy="12" r="1" />
+                <circle cx="16" cy="12" r="1" />
+            </svg>
+        </button>
+    </div>
 
     <!-- Customer Testimonials Section -->
     <section class="customer-testimonials-section">
