@@ -1,5 +1,5 @@
-const authStorageKey = 'zackconnect-users';
 const authSessionKey = 'zackconnect-auth-session';
+const apiBaseUrl = window.ZACKCONNECT_API_URL || 'http://localhost:3000/api';
 const authReturnPages = new Set([
     'index.html',
     'software.html',
@@ -10,12 +10,44 @@ const authReturnPages = new Set([
     'admin.html'
 ]);
 
+async function apiRequest(path, options = {}) {
+    const headers = new Headers(options.headers || {});
+    const session = getAuthSession();
+    if (session?.token) headers.set('Authorization', `Bearer ${session.token}`);
+    if (options.body !== undefined) headers.set('Content-Type', 'application/json');
+
+    let response;
+    try {
+        response = await fetch(`${apiBaseUrl}${path}`, { ...options, headers });
+    } catch (error) {
+        console.error(`Unable to connect to the API at ${apiBaseUrl}.`, error);
+        throw new Error('Unable to reach the Zackconnect API. Make sure the backend and database are running.');
+    }
+    const responseText = await response.text();
+    let body = {};
+    if (responseText) {
+        try {
+            body = JSON.parse(responseText);
+        } catch (error) {
+            console.error('The API returned an invalid JSON response.', error);
+            throw new Error('The server returned an invalid response.');
+        }
+    }
+    if (!response.ok) throw new Error(body.error || `Request failed (${response.status}).`);
+    return body;
+}
+
 function getAuthSession() {
     try {
         const serialized = localStorage.getItem(authSessionKey) || sessionStorage.getItem(authSessionKey);
         if (!serialized) return null;
         const session = JSON.parse(serialized);
-        return session && typeof session.email === 'string' ? session : null;
+        if (session && typeof session.email === 'string' && typeof session.token === 'string') {
+            return session;
+        }
+        localStorage.removeItem(authSessionKey);
+        sessionStorage.removeItem(authSessionKey);
+        return null;
     } catch (error) {
         console.error('Unable to read the sign-in session.', error);
         return null;
@@ -38,8 +70,13 @@ function getAuthDestination() {
     }
 }
 
-function setAuthSession(user, remember) {
-    const session = JSON.stringify({ email: user.email, name: user.name });
+function setAuthSession(user, remember, token) {
+    const session = JSON.stringify({
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        token
+    });
     const destinationStorage = remember ? localStorage : sessionStorage;
     const otherStorage = remember ? sessionStorage : localStorage;
     otherStorage.removeItem(authSessionKey);
@@ -87,30 +124,6 @@ if (currentAuthPage === 'signup.html' || currentAuthPage === 'login.html') {
     }
 }
 
-async function hashAuthPassword(password, salt) {
-    if (!window.crypto?.subtle) {
-        throw new Error('Secure sign-in is unavailable in this browser context. Open the site through localhost or HTTPS.');
-    }
-    const key = await window.crypto.subtle.importKey(
-        'raw',
-        new TextEncoder().encode(password),
-        'PBKDF2',
-        false,
-        ['deriveBits']
-    );
-    const bits = await window.crypto.subtle.deriveBits({
-        name: 'PBKDF2',
-        salt,
-        iterations: 210000,
-        hash: 'SHA-256'
-    }, key, 256);
-    return Array.from(new Uint8Array(bits), byte => byte.toString(16).padStart(2, '0')).join('');
-}
-
-function hexToBytes(hex) {
-    return Uint8Array.from(hex.match(/.{2}/g) || [], byte => Number.parseInt(byte, 16));
-}
-
 function redirectAfterAuth() {
     window.location.replace(getAuthDestination());
 }
@@ -135,23 +148,16 @@ if (signupForm) {
         }
 
         try {
-            const users = loadCatalog(authStorageKey, []);
-            if (users.some(user => user.email === email)) {
-                setStatus(status, 'An account with this email already exists. Please log in.', true);
-                return;
-            }
-            const salt = window.crypto.getRandomValues(new Uint8Array(16));
-            const passwordHash = await hashAuthPassword(password, salt);
-            const user = {
-                name,
-                email,
-                phone: String(values.get('phone') || '').trim(),
-                passwordSalt: Array.from(salt, byte => byte.toString(16).padStart(2, '0')).join(''),
-                passwordHash
-            };
-            users.push(user);
-            saveCatalog(authStorageKey, users);
-            setAuthSession(user, Boolean(values.get('remember')));
+            const { user, token } = await apiRequest('/auth/register', {
+                method: 'POST',
+                body: JSON.stringify({
+                    name,
+                    email,
+                    phone: String(values.get('phone') || '').trim(),
+                    password
+                })
+            });
+            setAuthSession(user, Boolean(values.get('remember')), token);
             redirectAfterAuth();
         } catch (error) {
             console.error('Unable to create account.', error);
@@ -169,22 +175,11 @@ if (loginForm) {
         const email = String(values.get('email') || '').trim().toLowerCase();
         const password = String(values.get('password') || '');
         try {
-            const users = loadCatalog(authStorageKey, []);
-            const user = users.find(item => item.email === email);
-            if (!user) {
-                setStatus(status, 'No account was found for this email. Please sign up below.', true);
-                return;
-            }
-            if (!user.passwordSalt || !user.passwordHash) {
-                setStatus(status, 'This account cannot be verified. Please sign up below.', true);
-                return;
-            }
-            const enteredHash = await hashAuthPassword(password, hexToBytes(user.passwordSalt));
-            if (enteredHash !== user.passwordHash) {
-                setStatus(status, 'Email or password is incorrect. Please check your details or sign up below.', true);
-                return;
-            }
-            setAuthSession(user, Boolean(values.get('remember')));
+            const { user, token } = await apiRequest('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password })
+            });
+            setAuthSession(user, Boolean(values.get('remember')), token);
             redirectAfterAuth();
         } catch (error) {
             console.error('Unable to sign in.', error);
@@ -304,38 +299,6 @@ if (typeof IntersectionObserver !== 'undefined') {
     });
 }
 
-const defaultBundles = [
-    ['MTN', '1GB', 4.9], ['MTN', '2GB', 9.8], ['MTN', '3GB', 16], ['MTN', '4GB', 19.5],
-    ['MTN', '5GB', 23.5], ['MTN', '6GB', 29], ['MTN', '8GB', 37], ['MTN', '10GB', 44],
-    ['MTN', '15GB', 64], ['MTN', '20GB', 84], ['MTN', '25GB', 105], ['MTN', '30GB', 128],
-    ['MTN', '40GB', 167], ['MTN', '50GB', 215], ['MTN', '100GB', 365], ['MTN', '200GB', 420]
-].map(([network, size, price], index) => ({
-    id: `seed-bundle-${index + 1}`,
-    network,
-    size,
-    price,
-    validity: 'No-Expiry'
-})).concat([
-    ['10GB', 45], ['15GB', 65], ['20GB', 83], ['25GB', 100],
-    ['30GB', 118], ['50GB', 200], ['100GB', 395]
-].map(([size, price], index) => ({
-    id: `seed-bundle-telecel-${index + 1}`,
-    network: 'TELECEL',
-    size,
-    price,
-    validity: 'No-Expiry'
-}))).concat([
-    ['1GB', 4.5], ['2GB', 9], ['3GB', 13.5], ['4GB', 17.5],
-    ['5GB', 22], ['6GB', 25], ['7GB', 30], ['8GB', 33],
-    ['10GB', 41], ['15GB', 61], ['20GB', 80], ['25GB', 100], ['50GB', 200]
-].map(([size, price], index) => ({
-    id: `seed-bundle-airteltigo-${index + 1}`,
-    network: 'AIRTELTIGO',
-    size,
-    price,
-    validity: 'No-Expiry'
-})));
-
 const defaultCars = [
     ['Toyota Camry 2024', '$25,000', 'New', 'Automatic', '2.5L'],
     ['Honda Accord 2023', '$22,500', 'New', 'Automatic', '2.0L'],
@@ -405,7 +368,7 @@ function formatBundlePrice(price) {
     return `GH¢ ${Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(2)}`;
 }
 
-let bundleCatalog = loadCatalog('zackconnect-bundles', defaultBundles);
+let bundleCatalog = [];
 let carCatalog = loadCatalog('zackconnect-cars', defaultCars);
 let tricycleCatalog = loadCatalog('zackconnect-tricycles', defaultTricycles);
 let selectedNetwork = 'MTN';
@@ -484,21 +447,6 @@ function createMediaUrl(record) {
 
 window.addEventListener('beforeunload', () => objectUrls.forEach(URL.revokeObjectURL));
 
-const bundleCatalogMigrationKeys = [
-    'zackconnect-bundle-catalog-telecel-v1',
-    'zackconnect-bundle-catalog-airteltigo-v1'
-];
-bundleCatalogMigrationKeys.forEach((migrationKey) => {
-    if (localStorage.getItem(migrationKey)) return;
-    const existingBundleIds = new Set(bundleCatalog.map(bundle => bundle.id));
-    const newDefaults = defaultBundles.filter(bundle => !existingBundleIds.has(bundle.id));
-    if (newDefaults.length) {
-        bundleCatalog = [...bundleCatalog, ...newDefaults];
-        saveCatalog('zackconnect-bundles', bundleCatalog);
-    }
-    localStorage.setItem(migrationKey, 'complete');
-});
-
 function createElement(tag, className, text) {
     const element = document.createElement(tag);
     if (className) element.className = className;
@@ -536,6 +484,29 @@ function renderBundles() {
         card.append(meta);
         grid.append(card);
     });
+}
+
+async function refreshBundleCatalog() {
+    try {
+        const result = await apiRequest('/catalog/bundles');
+        if (!Array.isArray(result.items)) throw new Error('The server returned an invalid data bundle catalog.');
+        bundleCatalog = result.items;
+        renderBundles();
+        window.dispatchEvent(new CustomEvent('zackconnect:bundles-updated'));
+        return true;
+    } catch (error) {
+        console.error('Unable to load the data bundle catalog.', error);
+        bundleCatalog = [];
+        renderBundles();
+        const grid = document.querySelector('.bundle-grid');
+        if (grid) {
+            grid.replaceChildren(createElement('p', 'empty-catalog-message', 'Unable to load bundles. Please try again later.'));
+        }
+        const status = document.getElementById('bundleAdminStatus');
+        if (status) setStatus(status, error.message || 'Unable to load bundles from the server.', true);
+        window.dispatchEvent(new CustomEvent('zackconnect:bundles-updated'));
+        return false;
+    }
 }
 
 async function renderCars(condition = 'All') {
@@ -752,25 +723,55 @@ if (bundleModal) {
     const modalTitle = document.getElementById('bundleModalTitle');
     const modalTotal = document.getElementById('bundleModalTotal');
     const payButton = document.getElementById('bundlePayButton');
+    const orderStatus = document.getElementById('bundleOrderStatus');
+    const recipientInput = document.getElementById('bundle-recipient');
+    const emailInput = document.getElementById('bundle-email');
     const closeButton = document.querySelector('.bundle-modal-close');
     const bundleGrid = document.querySelector('.bundle-grid');
+    let selectedBundle = null;
 
     bundleGrid?.addEventListener('click', (event) => {
         const card = event.target.closest('.bundle-card');
         if (!card) return;
         const bundle = bundleCatalog.find(item => item.id === card.dataset.bundleId);
         if (!bundle) return;
+        selectedBundle = bundle;
         const price = formatBundlePrice(bundle.price);
 
         if (modalTitle) modalTitle.textContent = `${bundle.size} - ${bundle.network}`;
         if (modalTotal) modalTotal.textContent = price;
+        setStatus(orderStatus, '');
         if (payButton) {
-            payButton.textContent = `Pay ${price}`;
+            payButton.textContent = `Create order - ${price}`;
             payButton.classList.remove('network-mtn', 'network-telecel', 'network-airteltigo', 'network-afa-reg');
             const networkClass = bundle.network.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
             payButton.classList.add(`network-${networkClass}`);
         }
         bundleModal.classList.remove('hidden');
+    });
+
+    payButton?.addEventListener('click', async () => {
+        if (!selectedBundle || !recipientInput || !emailInput) return;
+        if (!recipientInput.reportValidity() || !emailInput.reportValidity()) return;
+
+        payButton.disabled = true;
+        setStatus(orderStatus, '');
+        try {
+            const { order } = await apiRequest('/bundle-orders', {
+                method: 'POST',
+                body: JSON.stringify({
+                    bundleId: selectedBundle.id,
+                    recipientPhone: recipientInput.value.trim(),
+                    email: emailInput.value.trim()
+                })
+            });
+            setStatus(orderStatus, `Order ${order.order_code} recorded as Pending payment. No payment was taken.`);
+        } catch (error) {
+            console.error('Unable to record bundle order.', error);
+            setStatus(orderStatus, error.message || 'Unable to record this bundle order.', true);
+        } finally {
+            payButton.disabled = false;
+        }
     });
 
     closeButton?.addEventListener('click', () => bundleModal.classList.add('hidden'));
@@ -846,8 +847,9 @@ if (bundleAdminForm) {
         bundleAdminCancel.classList.add('hidden');
     }
 
-    bundleAdminForm.addEventListener('submit', (event) => {
+    bundleAdminForm.addEventListener('submit', async (event) => {
         event.preventDefault();
+        const submitButton = bundleAdminForm.querySelector('button[type="submit"]');
         const size = bundleAdminSize.value.trim().toUpperCase();
         const price = Number(bundleAdminPrice.value);
         if (!size || !Number.isFinite(price) || price <= 0) {
@@ -860,15 +862,12 @@ if (bundleAdminForm) {
             item.network === bundleAdminNetwork.value &&
             item.size === size
         );
-        if (bundleAdminId.value && duplicate) {
+        if (duplicate) {
             setStatus(bundleAdminStatus, 'That network already has a bundle with this size.', true);
             return;
         }
 
-        const matchingBundle = bundleCatalog.find(item =>
-            item.network === bundleAdminNetwork.value && item.size === size
-        );
-        const id = bundleAdminId.value || matchingBundle?.id || `bundle-${Date.now()}`;
+        const id = bundleAdminId.value || `bundle-${crypto.randomUUID()}`;
         const bundle = {
             id,
             network: bundleAdminNetwork.value,
@@ -876,18 +875,32 @@ if (bundleAdminForm) {
             price,
             validity: bundleAdminValidity.value.trim() || 'No-Expiry'
         };
-        const existingIndex = bundleCatalog.findIndex(item => item.id === id);
-        if (existingIndex >= 0) bundleCatalog[existingIndex] = bundle;
-        else bundleCatalog.push(bundle);
-
-        saveCatalog('zackconnect-bundles', bundleCatalog);
-        renderBundleAdminList();
-        renderBundles();
-        resetBundleForm();
-        setStatus(bundleAdminStatus, 'Bundle saved and storefront updated.');
+        submitButton.disabled = true;
+        setStatus(bundleAdminStatus, '');
+        try {
+            await apiRequest(
+                bundleAdminId.value ? `/catalog/bundles/${encodeURIComponent(id)}` : '/catalog/bundles',
+                {
+                    method: bundleAdminId.value ? 'PUT' : 'POST',
+                    body: JSON.stringify({ item: bundle })
+                }
+            );
+            const refreshed = await refreshBundleCatalog();
+            resetBundleForm();
+            setStatus(
+                bundleAdminStatus,
+                refreshed ? 'Bundle saved and storefront updated.' : 'Bundle saved, but the catalog could not be refreshed.',
+                !refreshed
+            );
+        } catch (error) {
+            console.error('Unable to save data bundle.', error);
+            setStatus(bundleAdminStatus, error.message || 'Unable to save the bundle.', true);
+        } finally {
+            submitButton.disabled = false;
+        }
     });
 
-    bundleAdminList.addEventListener('click', (event) => {
+    bundleAdminList.addEventListener('click', async (event) => {
         const button = event.target.closest('button[data-action]');
         if (!button) return;
         const bundle = bundleCatalog.find(item => item.id === button.dataset.id);
@@ -904,21 +917,29 @@ if (bundleAdminForm) {
             return;
         }
 
-        bundleCatalog = bundleCatalog.filter(item => item.id !== bundle.id);
-        saveCatalog('zackconnect-bundles', bundleCatalog);
-        renderBundleAdminList();
-        renderBundles();
-        setStatus(bundleAdminStatus, `${bundle.network} ${bundle.size} removed.`);
+        button.disabled = true;
+        setStatus(bundleAdminStatus, '');
+        try {
+            await apiRequest(`/catalog/bundles/${encodeURIComponent(bundle.id)}`, { method: 'DELETE' });
+            const refreshed = await refreshBundleCatalog();
+            setStatus(
+                bundleAdminStatus,
+                refreshed
+                    ? `${bundle.network} ${bundle.size} removed.`
+                    : 'Bundle removed, but the catalog could not be refreshed.',
+                !refreshed
+            );
+        } catch (error) {
+            console.error('Unable to delete data bundle.', error);
+            setStatus(bundleAdminStatus, error.message || 'Unable to delete the bundle.', true);
+        } finally {
+            button.disabled = false;
+        }
     });
 
     bundleAdminCancel.addEventListener('click', resetBundleForm);
-    window.addEventListener('storage', (event) => {
-        if (event.key !== 'zackconnect-bundles') return;
-        bundleCatalog = loadCatalog('zackconnect-bundles', defaultBundles);
-        renderBundleAdminList();
-        renderBundles();
-    });
-    renderBundleAdminList();
+    window.addEventListener('zackconnect:bundles-updated', renderBundleAdminList);
+    refreshBundleCatalog();
 }
 
 const carAdminForm = document.getElementById('carAdminForm');
@@ -1423,6 +1444,12 @@ if (bundleSupportForm && bundleSupportLauncher && bundleSupportPanel && bundleSu
     bundleSupportLauncher.addEventListener('click', () => {
         setBundleSupportOpen(bundleSupportPanel.classList.contains('hidden'));
     });
+    document.querySelectorAll('.footer-chat-launcher').forEach((link) => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            setBundleSupportOpen(true);
+        });
+    });
     bundleSupportClose.addEventListener('click', () => setBundleSupportOpen(false));
     chatClose.addEventListener('click', () => setBundleSupportOpen(false));
     chatCompose.addEventListener('click', () => {
@@ -1530,6 +1557,7 @@ if (bundleSupportForm && bundleSupportLauncher && bundleSupportPanel && bundleSu
         supportMessages = loadCatalog(supportMessagesKey, []);
         renderSupportMessages();
     });
+    if (window.location.hash === '#support-chat') setBundleSupportOpen(true);
 }
 
 const startSoftwareProjectButton = document.getElementById('startSoftwareProject');
@@ -1838,6 +1866,54 @@ if (adminEnquiriesList) {
     renderEnquiries();
 }
 
+const adminBundleOrdersList = document.getElementById('adminBundleOrdersList');
+if (adminBundleOrdersList) {
+    const count = document.getElementById('bundleOrdersCount');
+    const status = document.getElementById('adminBundleOrdersStatus');
+
+    async function loadBundleOrders() {
+        adminBundleOrdersList.replaceChildren();
+        setStatus(status, '');
+        try {
+            const { orders } = await apiRequest('/bundle-orders');
+            if (!Array.isArray(orders)) throw new Error('The server returned an invalid bundle order list.');
+            count.textContent = String(orders.length);
+            if (!orders.length) {
+                adminBundleOrdersList.append(createElement('p', 'admin-empty-enquiries', 'No bundle orders have been recorded yet.'));
+                return;
+            }
+            orders.forEach((order) => {
+                const row = createElement('div', 'table-row');
+                const date = new Date(order.created_at);
+                const values = [
+                    order.order_code,
+                    order.recipient_phone,
+                    `${order.size} - ${order.network}`,
+                    formatBundlePrice(order.price),
+                    order.status,
+                    Number.isNaN(date.getTime()) ? '' : date.toLocaleString()
+                ];
+                values.forEach((value, index) => {
+                    const cell = createElement('div', 'table-cell');
+                    if (index === 4) {
+                        cell.append(createElement('span', 'status-badge pending', value));
+                    } else {
+                        cell.textContent = value;
+                    }
+                    row.append(cell);
+                });
+                adminBundleOrdersList.append(row);
+            });
+        } catch (error) {
+            console.error('Unable to load bundle order history.', error);
+            count.textContent = '—';
+            setStatus(status, error.message || 'Unable to load bundle order history.', true);
+        }
+    }
+
+    loadBundleOrders();
+}
+
 const adminSupportChatList = document.getElementById('adminSupportChatList');
 if (adminSupportChatList) {
     const supportMessagesKey = 'zackconnect-bundle-support-chat';
@@ -2051,10 +2127,7 @@ if (adminSoftwareProjectsList) {
 }
 
 window.addEventListener('storage', (event) => {
-    if (event.key === 'zackconnect-bundles' && document.querySelector('.bundle-grid')) {
-        bundleCatalog = loadCatalog('zackconnect-bundles', defaultBundles);
-        renderBundles();
-    } else if (event.key === 'zackconnect-cars' && document.querySelector('.car-grid')) {
+    if (event.key === 'zackconnect-cars' && document.querySelector('.car-grid')) {
         carCatalog = loadCatalog('zackconnect-cars', defaultCars);
         renderCars();
     } else if (event.key === 'zackconnect-tricycles' && document.querySelector('.tricycle-grid')) {
@@ -2062,5 +2135,7 @@ window.addEventListener('storage', (event) => {
         renderTricycles();
     }
 });
+
+if (document.querySelector('.bundle-grid') && !bundleAdminForm) refreshBundleCatalog();
 
 console.log('Zackconnect website loaded successfully!');

@@ -50,7 +50,7 @@
                 <div class="stat-card">
                     <div class="stat-icon">📦</div>
                     <div class="stat-info">
-                        <h3 class="stat-number">156</h3>
+                        <h3 class="stat-number" id="bundleOrdersCount">0</h3>
                         <p class="stat-label">Total Orders</p>
                     </div>
                 </div>
@@ -88,6 +88,25 @@
                 </div>
                 <div id="adminEnquiriesList"></div>
             </div>
+        </div>
+    </section>
+
+    <section class="admin-enquiries-section">
+        <div class="container">
+            <h2 class="admin-section-title">Bundle order log</h2>
+            <p class="admin-catalog-description">Orders submitted from the bundle page are stored in MongoDB as pending payment. No payment has been collected yet.</p>
+            <div class="enquiries-table bundle-order-table">
+                <div class="table-header">
+                    <div class="table-cell">Order</div>
+                    <div class="table-cell">Recipient</div>
+                    <div class="table-cell">Bundle</div>
+                    <div class="table-cell">Total</div>
+                    <div class="table-cell">Status</div>
+                    <div class="table-cell">Date</div>
+                </div>
+                <div id="adminBundleOrdersList" aria-live="polite"></div>
+            </div>
+            <p class="admin-catalog-status" id="adminBundleOrdersStatus" role="status" aria-live="polite"></p>
         </div>
     </section>
 
@@ -133,7 +152,7 @@
     <section class="admin-catalog-section">
         <div class="container">
             <h2 class="admin-section-title">Manage data bundles</h2>
-            <p class="admin-catalog-description">Set a price for an existing bundle or add a bundle for another network or size. Changes update the Data Bundles page in this browser; keep both pages on the same site address.</p>
+            <p class="admin-catalog-description">Manage the shared MongoDB bundle catalog. Changes appear on the Data Bundles page for every visitor. Sign in with an administrator account to make changes.</p>
             <form class="admin-catalog-form" id="bundleAdminForm">
                 <input type="hidden" id="bundleAdminId">
                 <label>
@@ -336,7 +355,7 @@
                         <li class="social-facebook" aria-label="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.4 21v-8h2.7l.4-3.1h-3.1V8c0-.9.3-1.5 1.6-1.5h1.7V3.7c-.3 0-1.4-.1-2.6-.1-2.6 0-4.3 1.6-4.3 4.5v1.8H7v3.1h2.8v8h3.6Z"/></svg></li>
                         <li class="social-instagram" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle class="social-icon-dot" cx="17.6" cy="6.7" r="1"/></svg></li>
                         <li class="social-tiktok" aria-label="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.6 8.2a6.4 6.4 0 0 1-4-1.4v7.1a6 6 0 1 1-5.2-5.9v3.6a2.5 2.5 0 1 0 1.6 2.3V3h3.6c.2 2.3 1.8 4.1 4 4.5v.7Z"/></svg></li>
-                        <li class="social-whatsapp" aria-label="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 11.8a8.2 8.2 0 0 1-12.1 7.1L3 20l1.2-4.9a8.2 8.2 0 1 1 16-3.3Z"/><path d="M8.4 7.8c.2-.4.5-.4.8-.4h.5c.2 0 .4 0 .5.4l.8 1.8c.1.3.1.5-.1.7l-.6.7c-.2.2-.2.4 0 .7a7 7 0 0 0 2.5 2.4c.3.2.5.2.7-.1l.8-.9c.2-.2.4-.3.7-.2l1.7.8c.3.1.4.3.4.5 0 .3-.2 1.2-.8 1.7-.5.5-1.2.7-1.9.6-.6-.1-1.4-.3-2.4-.8a9 9 0 0 1-3.1-2.7 7.1 7.1 0 0 1-1.5-2.8c-.2-.8 0-1.7.4-2.4Z"/></svg></li>
+                        <li class="social-whatsapp" aria-label="WhatsApp"><a class="footer-chat-launcher" href="data-bundels.html#support-chat" aria-label="Open Zackconnect support chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 11.8a8.2 8.2 0 0 1-12.1 7.1L3 20l1.2-4.9a8.2 8.2 0 1 1 16-3.3Z"/><path d="M8.4 7.8c.2-.4.5-.4.8-.4h.5c.2 0 .4 0 .5.4l.8 1.8c.1.3.1.5-.1.7l-.6.7c-.2.2-.2.4 0 .7a7 7 0 0 0 2.5 2.4c.3.2.5.2.7-.1l.8-.9c.2-.2.4-.3.7-.2l1.7.8c.3.1.4.3.4.5 0 .3-.2 1.2-.8 1.7-.5.5-1.2.7-1.9.6-.6-.1-1.4-.3-2.4-.8a9 9 0 0 1-3.1-2.7 7.1 7.1 0 0 1-1.5-2.8c-.2-.8 0-1.7.4-2.4Z"/></svg></a></li>
                     </ul>
                 </div>
             </div>

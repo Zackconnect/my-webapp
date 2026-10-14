@@ -1596,6 +1596,11 @@ body {
     overflow-wrap: anywhere;
 }
 
+.bundle-order-table .table-header,
+.bundle-order-table .table-row {
+    grid-template-columns: 1.3fr 1fr 1.3fr 0.7fr 1.1fr 1fr;
+}
+
 .enquiry-message-cell {
     max-height: 4.5em;
     overflow: auto;
@@ -4577,6 +4582,14 @@ button.bundle-settings-option {
     transform: translateY(-3px);
 }
 
+.footer-socials .footer-chat-launcher {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    color: inherit;
+}
+
 .footer-socials svg {
     width: 20px;
     height: 20px;
@@ -5087,6 +5100,11 @@ button.bundle-settings-option {
 
     .enquiries-table .table-header,
     .enquiries-table .table-row {
+        min-width: 740px;
+    }
+
+    .bundle-order-table .table-header,
+    .bundle-order-table .table-row {
         min-width: 740px;
     }
 }
