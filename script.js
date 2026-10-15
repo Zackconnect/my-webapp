@@ -1,5 +1,9 @@
 const authSessionKey = 'zackconnect-auth-session';
-const apiBaseUrl = window.ZACKCONNECT_API_URL || 'http://localhost:3000/api';
+const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const defaultApiBaseUrl = isLocalhost
+    ? 'http://localhost:3000/api'
+    : 'https://my-backend-six-dun.vercel.app/api';
+const apiBaseUrl = window.ZACKCONNECT_API_URL || defaultApiBaseUrl;
 const authReturnPages = new Set([
     'index.html',
     'software.html',
